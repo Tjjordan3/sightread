@@ -1,0 +1,12 @@
+# Xcode
+ios/**/DerivedData/
+ios/**/*.xcuserstate
+ios/**/xcuserdata/
+
+# Secrets
+.env
+*.pem
+
+# OS
+.DS_Store
+Thumbs.db
