@@ -28,6 +28,8 @@ URL scheme for Meta AI callbacks: `sightread://`
 3. Paste a **Gemini** key from [Google AI Studio](https://aistudio.google.com/) (free tier) and/or an **OpenAI** key.
 4. Choose provider, prompt preset, and analysis interval (2–10 seconds).
 
+Sightread runs without keys — AI features are enabled once you add them in Settings.
+
 Keys are saved in the iOS Keychain on device only.
 
 ## 4. Connect and stream

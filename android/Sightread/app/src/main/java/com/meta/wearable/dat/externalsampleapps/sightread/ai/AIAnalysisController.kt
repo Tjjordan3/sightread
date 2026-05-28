@@ -39,11 +39,13 @@ class AIAnalysisController(
   private var lastSampleMs: Long = 0
   private val mutex = Mutex()
   private var isProcessing = false
+  private var didShowMissingKeyError = false
 
   fun reset() {
     analysisJob?.cancel()
     lastSampleMs = 0
     isProcessing = false
+    didShowMissingKeyError = false
     speechService.stop()
     _uiState.value = AIUiState()
   }
@@ -51,11 +53,15 @@ class AIAnalysisController(
   fun processFrame(bitmap: Bitmap) {
     if (!settings.isAIEnabled) return
     if (!settings.hasApiKeyForCurrentProvider()) {
-      _uiState.update {
-        it.copy(analysisState = AnalysisState.ERROR, errorMessage = "Add API key in Settings.")
+      if (!didShowMissingKeyError) {
+        didShowMissingKeyError = true
+        _uiState.update {
+          it.copy(analysisState = AnalysisState.ERROR, errorMessage = "Add API key in Settings.")
+        }
       }
       return
     }
+    didShowMissingKeyError = false
     val now = System.currentTimeMillis()
     if (isProcessing || now - lastSampleMs < settings.analysisIntervalSec * 1000L) return
     lastSampleMs = now

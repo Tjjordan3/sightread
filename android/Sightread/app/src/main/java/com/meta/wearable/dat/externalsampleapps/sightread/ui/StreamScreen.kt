@@ -59,6 +59,7 @@ fun StreamScreen(
   val aiState by streamViewModel.aiController.uiState.collectAsStateWithLifecycle()
   val settings = remember { SettingsRepository(LocalContext.current) }
   var showChat by remember { mutableStateOf(false) }
+  val hasApiKey = remember(settings.provider) { settings.hasApiKeyForCurrentProvider() }
 
   LaunchedEffect(Unit) {
     streamViewModel.prepareForStreaming()
@@ -125,8 +126,17 @@ fun StreamScreen(
             label = stringResource(R.string.analyze_now_button),
             onClick = { streamViewModel.analyzeCurrentFrame() },
             modifier = Modifier.weight(1f),
+            enabled = hasApiKey,
         )
         CaptureButton(onClick = { streamViewModel.capturePhoto() })
+      }
+      if (!hasApiKey) {
+        Text(
+            text = "Add an API key in AI Settings to use AI.",
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(horizontal = 24.dp, vertical = 4.dp),
+        )
       }
     }
   }

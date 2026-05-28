@@ -41,6 +41,12 @@ sightread/
 - Meta AI app v254+, Ray-Ban Meta firmware v20+
 - Google AI Studio (Gemini) and/or OpenAI API key
 
+## API keys (no code changes)
+
+Sightread does **not** require AI keys at build time. Add keys in-app:
+- iOS: **Settings** → paste Gemini/OpenAI keys (stored in Keychain)
+- Android: **AI Settings** → paste keys (stored on-device)
+
 ## License
 
 Derived from Meta''s CameraAccess sample (see `ios/Sightread/`). AI integration and Sightread branding are project additions.

@@ -66,23 +66,23 @@ struct NonStreamView: View {
           .overlay(alignment: .trailing) {
             if showSettingsMenu {
               VStack(alignment: .trailing, spacing: 8) {
-              CustomButton(title: "AI Settings", style: .primary, isDisabled: false) {
-                showAISettings = true
-                withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) { showSettingsMenu = false }
-              }
-              .frame(width: 140)
-              CustomButton(
-                title: "Disconnect",
-                style: .destructive,
-                isDisabled: wearablesVM.registrationState != .registered
-              ) {
-                wearablesVM.disconnectGlasses()
-                withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-                  showSettingsMenu = false
+                CustomButton(title: "AI Settings", style: .primary, isDisabled: false) {
+                  showAISettings = true
+                  withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) { showSettingsMenu = false }
                 }
-              }
-              .frame(width: 140)
-              }
+                .frame(width: 140)
+
+                CustomButton(
+                  title: "Disconnect",
+                  style: .destructive,
+                  isDisabled: wearablesVM.registrationState != .registered
+                ) {
+                  wearablesVM.disconnectGlasses()
+                  withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                    showSettingsMenu = false
+                  }
+                }
+                .frame(width: 140)
               }
               .transition(.scale(scale: 0.01, anchor: .trailing).combined(with: .opacity))
             }

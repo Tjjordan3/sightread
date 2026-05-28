@@ -49,6 +49,8 @@ fun ChatScreen(
         ),
 ) {
   val uiState by chatViewModel.uiState.collectAsStateWithLifecycle()
+  val settings = remember(LocalContext.current) { SettingsRepository(LocalContext.current) }
+  val hasApiKey = remember(settings.provider) { settings.hasApiKeyForCurrentProvider() }
 
   Column(modifier = modifier) {
     TopAppBar(title = { Text("Chat") })
@@ -112,11 +114,19 @@ fun ChatScreen(
         )
         Button(
             onClick = { chatViewModel.send(getCurrentFrame()) },
-            enabled = !uiState.isSending,
+            enabled = !uiState.isSending && hasApiKey,
             modifier = Modifier.padding(start = 8.dp),
         ) {
           Text("Send")
         }
+      }
+      if (!hasApiKey) {
+        Text(
+            text = "Add an API key in AI Settings to chat.",
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(top = 6.dp),
+        )
       }
     }
   }

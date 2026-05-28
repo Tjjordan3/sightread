@@ -84,10 +84,19 @@ struct ControlsView: View {
         CustomButton(title: "Stop", style: .destructive, isDisabled: false) {
           Task { await viewModel.stopSession() }
         }
-        CustomButton(title: "Analyze now", style: .primary, isDisabled: false) {
+        CustomButton(
+          title: "Analyze now",
+          style: .primary,
+          isDisabled: !SettingsStore.shared.hasAPIKeyForCurrentProvider
+        ) {
           viewModel.analyzeCurrentFrame()
         }
         CircleButton(icon: "camera.fill", text: nil) { viewModel.capturePhoto() }
+      }
+      if !SettingsStore.shared.hasAPIKeyForCurrentProvider {
+        Text("Add an API key in Settings to use AI.")
+          .font(.caption2)
+          .foregroundStyle(.white.opacity(0.75))
       }
     }
   }

@@ -79,7 +79,13 @@ struct ChatView: View {
               viewModel.send(attachedImage: attachFrame ? getCurrentFrame() : nil)
             }
             .buttonStyle(.borderedProminent)
-            .disabled(viewModel.isSending)
+            .disabled(viewModel.isSending || !settings.hasAPIKeyForCurrentProvider)
+          }
+          if !settings.hasAPIKeyForCurrentProvider {
+            Text("Add your \(settings.provider.displayName) API key in Settings to chat.")
+              .font(.caption2)
+              .foregroundStyle(.secondary)
+              .frame(maxWidth: .infinity, alignment: .leading)
           }
         }
         .padding(12)
