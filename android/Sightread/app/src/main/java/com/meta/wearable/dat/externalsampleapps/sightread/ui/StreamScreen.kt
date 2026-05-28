@@ -12,12 +12,21 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Chat
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
@@ -49,6 +58,7 @@ fun StreamScreen(
   val streamUiState by streamViewModel.uiState.collectAsStateWithLifecycle()
   val aiState by streamViewModel.aiController.uiState.collectAsStateWithLifecycle()
   val settings = remember { SettingsRepository(LocalContext.current) }
+  var showChat by remember { mutableStateOf(false) }
 
   LaunchedEffect(Unit) {
     streamViewModel.prepareForStreaming()
@@ -71,6 +81,20 @@ fun StreamScreen(
     }
 
     Column(modifier = Modifier.fillMaxSize().padding(top = 8.dp)) {
+      Row(
+          modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp),
+          verticalAlignment = Alignment.CenterVertically,
+      ) {
+        Text(
+            text = "Target: 720p/30 (may auto-adjust)",
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.weight(1f),
+        )
+        IconButton(onClick = { showChat = true }) {
+          Icon(Icons.Default.Chat, contentDescription = "Chat")
+        }
+      }
       if (streamUiState.streamState == StreamState.STREAMING) {
         AIResponsePanel(
             aiState = aiState,
@@ -116,6 +140,16 @@ fun StreamScreen(
             streamViewModel.sharePhoto(bitmap)
             streamViewModel.hideShareDialog()
           },
+      )
+    }
+  }
+
+  if (showChat) {
+    ModalBottomSheet(onDismissRequest = { showChat = false }) {
+      ChatScreen(
+          getCurrentFrame = { streamUiState.videoFrame },
+          onClose = { showChat = false },
+          modifier = Modifier.fillMaxSize(),
       )
     }
   }

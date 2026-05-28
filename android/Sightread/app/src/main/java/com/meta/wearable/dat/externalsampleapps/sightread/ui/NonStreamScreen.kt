@@ -84,6 +84,7 @@ fun NonStreamScreen(
   val scope = rememberCoroutineScope()
   var dropdownExpanded by remember { mutableStateOf(false) }
   var showSettings by remember { mutableStateOf(false) }
+  var showChat by remember { mutableStateOf(false) }
   val isDisconnectEnabled = uiState.registrationState == RegistrationState.REGISTERED
   val isUpdateRequired = uiState.isFirmwareUpdateRequired || uiState.isDatAppUpdateRequired
   val activity = LocalActivity.current
@@ -109,6 +110,13 @@ fun NonStreamScreen(
             expanded = dropdownExpanded,
             onDismissRequest = { dropdownExpanded = false },
         ) {
+          DropdownMenuItem(
+              text = { Text(stringResource(R.string.chat_button)) },
+              onClick = {
+                showChat = true
+                dropdownExpanded = false
+              },
+          )
           DropdownMenuItem(
               text = { Text(stringResource(R.string.ai_settings_button)) },
               onClick = {
@@ -242,6 +250,19 @@ fun NonStreamScreen(
           SettingsScreen(
               settings = settings,
               onDone = { showSettings = false },
+              modifier = Modifier.fillMaxSize(),
+          )
+        }
+      }
+
+      if (showChat) {
+        ModalBottomSheet(
+            onDismissRequest = { showChat = false },
+            sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+        ) {
+          ChatScreen(
+              getCurrentFrame = { null },
+              onClose = { showChat = false },
               modifier = Modifier.fillMaxSize(),
           )
         }

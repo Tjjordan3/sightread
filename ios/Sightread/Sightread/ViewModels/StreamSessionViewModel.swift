@@ -116,7 +116,11 @@ final class StreamSessionViewModel {
       }
     }
 
-    let config = StreamConfiguration(videoCodec: VideoCodec.raw, resolution: StreamingResolution.low, frameRate: 15)
+    let config = StreamConfiguration(
+      videoCodec: VideoCodec.raw,
+      resolution: StreamingResolution.high,
+      frameRate: 30
+    )
     guard let newStream = try? deviceSession.addStream(config: config) else { return }
     stream = newStream
     streamingStatus = .waiting

@@ -5,8 +5,10 @@
 ## Features
 
 - Camera streaming from Ray-Ban Meta (Gen 1/2) through DAT SDK
+- Best-effort streaming target: **720p / 30 FPS** (may auto-adjust based on Bluetooth bandwidth)
 - Throttled vision AI (Gemini 2.0 Flash default, OpenAI GPT-4o-mini fallback)
 - Live AI response panel during streaming
+- In-app **Chat** with optional “attach current frame”
 - Prompt presets (scene, navigation, accessibility, safety, shopping, social)
 - Mock Device Kit for development without wearing glasses
 - API keys stored in iOS Keychain

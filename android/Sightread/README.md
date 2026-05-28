@@ -18,8 +18,9 @@ Kotlin + Jetpack Compose companion for Ray-Ban Meta glasses, based on Meta's Cam
 
 ## Features
 
-- DAT camera streaming (15 FPS, low quality for battery)
+- DAT camera streaming (best-effort 720p/30; may auto-adjust)
 - Gemini 2.0 Flash / OpenAI GPT-4o-mini vision analysis
 - Live AI response panel + Analyze now
+- In-app Chat + optional attach current frame
 - Optional TTS to glasses speakers (Bluetooth SCO)
 - Mock Device Kit (debug builds, ladybug FAB)

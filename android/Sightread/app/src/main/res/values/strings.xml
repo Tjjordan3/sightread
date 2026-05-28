@@ -10,6 +10,7 @@
     <string name="stop_stream_button_title" description="Stop streaming">Stop streaming</string>
     <string name="analyze_now_button" description="Analyze current frame">Analyze now</string>
     <string name="ai_settings_button" description="AI settings">AI Settings</string>
+    <string name="chat_button" description="Chat">Chat</string>
     <string name="home_tip_video_title" description="Tip title about video capture">Video Capture</string>
     <string name="home_tip_audio_title" description="Tip title about audio">Open-Ear Audio</string>
     <string name="home_tip_hands_title" description="Tip title about hands free">Enjoy On-the-Go</string>

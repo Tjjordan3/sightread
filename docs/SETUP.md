@@ -38,6 +38,14 @@ Keys are saved in the iOS Keychain on device only.
 4. AI responses appear in the panel at the top while streaming.
 5. Optional: enable **Read responses aloud** in Settings to hear answers on glasses speakers (Bluetooth HFP).
 
+## 4.5 Chat (Meta AI-style)
+
+1. While streaming, tap **Chat** (speech bubble / chat icon).
+2. Type a message and tap **Send**.
+3. Optional: toggle **Attach current frame** to include what the glasses are currently seeing.
+
+Sightread only sends a frame when you explicitly attach it.
+
 ## 5. Mock Device Kit (no glasses)
 
 1. Build **Debug** configuration.

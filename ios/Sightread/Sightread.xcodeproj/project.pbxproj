@@ -49,6 +49,10 @@
 		SR0100132F95000100000001 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = SR0100122F95000100000001 /* SettingsView.swift */; };
 		SR0100152F95000100000001 /* AudioRouteManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = SR0100142F95000100000001 /* AudioRouteManager.swift */; };
 		SR0100172F95000100000001 /* SpeechService.swift in Sources */ = {isa = PBXBuildFile; fileRef = SR0100162F95000100000001 /* SpeechService.swift */; };
+		SR0200012F95000200000001 /* ChatMessage.swift in Sources */ = {isa = PBXBuildFile; fileRef = SR0200002F95000200000001 /* ChatMessage.swift */; };
+		SR0200032F95000200000001 /* ChatAIService.swift in Sources */ = {isa = PBXBuildFile; fileRef = SR0200022F95000200000001 /* ChatAIService.swift */; };
+		SR0200052F95000200000001 /* ChatViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = SR0200042F95000200000001 /* ChatViewModel.swift */; };
+		SR0200072F95000200000001 /* ChatView.swift in Sources */ = {isa = PBXBuildFile; fileRef = SR0200062F95000200000001 /* ChatView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -125,6 +129,10 @@
 		SR0100122F95000100000001 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		SR0100142F95000100000001 /* AudioRouteManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioRouteManager.swift; sourceTree = "<group>"; };
 		SR0100162F95000100000001 /* SpeechService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpeechService.swift; sourceTree = "<group>"; };
+		SR0200002F95000200000001 /* ChatMessage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatMessage.swift; sourceTree = "<group>"; };
+		SR0200022F95000200000001 /* ChatAIService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatAIService.swift; sourceTree = "<group>"; };
+		SR0200042F95000200000001 /* ChatViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatViewModel.swift; sourceTree = "<group>"; };
+		SR0200062F95000200000001 /* ChatView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -205,6 +213,16 @@
 			path = Services;
 			sourceTree = "<group>";
 		};
+		SR0200202F95000200000001 /* Chat */ = {
+			isa = PBXGroup;
+			children = (
+				SR0200002F95000200000001 /* ChatMessage.swift */,
+				SR0200022F95000200000001 /* ChatAIService.swift */,
+				SR0200042F95000200000001 /* ChatViewModel.swift */,
+			);
+			path = Chat;
+			sourceTree = "<group>";
+		};
 		8FD96B702E6F0A9800F56AB1 /* ViewModels */ = {
 			isa = PBXGroup;
 			children = (
@@ -231,6 +249,7 @@
 				8FD96B752E6F0A9800F56AB1 /* StreamSessionView.swift */,
 				E6A188472EB918740097D0E1 /* StreamView.swift */,
 				SR0100102F95000100000001 /* AIResponsePanel.swift */,
+				SR0200062F95000200000001 /* ChatView.swift */,
 				SR0100122F95000100000001 /* SettingsView.swift */,
 				E6FD3BCD2EB4D53A00E7FE5D /* NonStreamView.swift */,
 			);
@@ -243,6 +262,7 @@
 				E66CC01A2F3E1A9300B07379 /* TestResources */,
 				SR0100202F95000100000001 /* Models */,
 				SR0100212F95000100000001 /* Services */,
+				SR0200202F95000200000001 /* Chat */,
 				8FD96B702E6F0A9800F56AB1 /* ViewModels */,
 				8FD96B762E6F0A9800F56AB1 /* Views */,
 				8FD96B772E6F0A9800F56AB1 /* Assets.xcassets */,
@@ -471,6 +491,10 @@
 				SR0100132F95000100000001 /* SettingsView.swift in Sources */,
 				SR0100152F95000100000001 /* AudioRouteManager.swift in Sources */,
 				SR0100172F95000100000001 /* SpeechService.swift in Sources */,
+				SR0200012F95000200000001 /* ChatMessage.swift in Sources */,
+				SR0200032F95000200000001 /* ChatAIService.swift in Sources */,
+				SR0200052F95000200000001 /* ChatViewModel.swift in Sources */,
+				SR0200072F95000200000001 /* ChatView.swift in Sources */,
 				E6FD3BCE2EB4D53A00E7FE5D /* NonStreamView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
