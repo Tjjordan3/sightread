@@ -65,8 +65,8 @@ interface StoredConversation {
   title: string;           // auto from first user message, editable later
   createdAt: number;
   updatedAt: number;
-  provider: AIProvider;    // snapshot at creation time
   messageCount: number;
+  // Provider is NOT stored per thread — always read from current Settings.
 }
 
 interface StoredMessage {
@@ -85,6 +85,25 @@ interface StoredImage {
   blob: Blob;
 }
 ```
+
+### Storage split (settings vs conversations)
+
+Keep **small, sensitive config** separate from **large chat data**:
+
+| Data | Store | Typical size | Already shipped? |
+|------|--------|--------------|------------------|
+| API keys (Gemini, OpenAI, Groq) | `localStorage` (`sightread_settings`) | &lt; 5 KB total | **Yes** — keys persist across refresh today |
+| Provider, prompts, TTS toggles | `localStorage` (same object) | &lt; 1 KB | Yes |
+| Conversation list + messages | **IndexedDB** | grows with use | Planned (Phase 1) |
+| Attached image blobs | **IndexedDB** | largest consumer | Planned (Phase 1c) |
+
+**API keys do not need a special permission request** beyond using the app on the same origin. The browser already grants the page access to its own `localStorage` and IndexedDB. There is no extra OS dialog for local storage (unlike camera/mic). Keys are written when the user taps **Save** in Settings and reloaded on every visit via `loadSettings()` in `web/Sightread/src/lib/settings.ts`.
+
+Space impact of keys is negligible — three API key strings are far too small to matter next to chat images. IndexedDB is where quota matters; we cap image storage (see Limits below).
+
+Optional later enhancement (not required for v1): [Credential Management API](https://developer.mozilla.org/en-US/docs/Web/API/Credential_Management_API) for autofill-style key retrieval on supported browsers — still on-device, still tiny.
+
+**PWA / service worker note:** The service worker can read the same-origin cache but should **not** duplicate API keys into the SW cache. Settings stay in `localStorage`; the SW only precaches static assets (JS/CSS/icons). No change to key handling when PWA lands.
 
 ### UI changes
 
@@ -119,7 +138,19 @@ Refactor `useAgentChat` to accept optional initial messages and expose `conversa
 | **1a** | `conversationStore` + save/load single thread |
 | **1b** | Conversation list UI + new/switch/delete |
 | **1c** | Image blob persistence + thumbnails in history |
-| **1d** | Title auto-generation, storage limits, clear-all |
+| **1d** | Title auto-generation, storage limits, clear-all, **export** |
+
+### Export (Phase 1d)
+
+Support portable exports from the conversation list or thread menu:
+
+| Format | Use case | Implementation |
+|--------|----------|----------------|
+| **JSON** | Backup, re-import later, dev/debug | Native `JSON.stringify` of conversation + base64 images or separate image files in a zip |
+| **Markdown** | Readable archive, notes apps, git | One `.md` file: headings per turn, `![image](...)` for attachments |
+| **PDF** | Share/print | Client-side via `jspdf` + optional `html2canvas` for image embeds, or print-to-PDF from a styled export view |
+
+Export is **download-only** (browser `Blob` + anchor click) — no server upload. Import from JSON can be a follow-up.
 
 ### Risks
 
@@ -147,7 +178,7 @@ Move beyond push-to-talk and manual “Voice chat” toward an ambient mode: the
 | **Push-to-talk** (keep) | Hold mic or tap to record one utterance |
 | **Voice chat** (keep, improve) | Auto-restart listening after TTS ends |
 | **Always listening** (new) | Optional toggle; listens in segments; VAD or silence timeout triggers send |
-| **Wake phrase** (stretch) | “Hey Sightread” — see constraints below |
+| **Wake phrase** (stretch) | **“Hey Sightread”** — see constraints below |
 
 ### Proposed architecture
 
@@ -202,7 +233,7 @@ stateDiagram-v2
 | Porcupine / openWakeWord (WASM) | Real wake word | Bundle size, license, setup complexity |
 | Push-to-talk only on mobile | Reliable | Not true wake word |
 
-**Recommendation:** Ship **2a + 2b** first. Treat wake phrase as **Phase 2c** research — document that true always-on wake word in a PWA is limited by OS/browser background mic policies (especially iOS Safari).
+**Recommendation:** Ship **2a + 2b** first. Phase **2c** targets wake phrase **“Hey Sightread”** (Porcupine custom keyword or transcript keyword POC). Document that true always-on wake word in a PWA is limited by OS/browser background mic policies (especially iOS Safari).
 
 ### Settings additions
 
@@ -219,7 +250,7 @@ duckAudioWhileSpeaking: boolean;
 |-------|-------------|
 | **2a** | `useVoiceSession` state machine + improved continuous STT |
 | **2b** | Silence detection + always-listening toggle |
-| **2c** | Wake phrase spike (Porcupine WASM or transcript keyword POC) |
+| **2c** | Wake phrase **“Hey Sightread”** (Porcupine WASM or transcript keyword POC) |
 
 ### Risks
 
@@ -351,7 +382,8 @@ Phase 2 (voice) ────────┘
 | `idb` | IndexedDB promise wrapper | 1 |
 | `vite-plugin-pwa` | Service worker + manifest injection | 3 |
 | `workbox-*` | (transitive) precaching | 3 |
-| `@picovoice/porcupine-web` (optional) | Wake word POC | 2c |
+| `jspdf` (optional) | PDF export | 1d |
+| `@picovoice/porcupine-web` (optional) | “Hey Sightread” wake word POC | 2c |
 
 No new dependencies required for Phase 2a if we extend existing hooks.
 
@@ -387,12 +419,14 @@ docs/WEB_ROADMAP.md                 # this file
 
 ---
 
-## Open questions (for later decisions)
+## Resolved decisions
 
-1. **Per-conversation provider** — lock Gemini/OpenAI/Groq at thread creation, or always use current Settings provider?
-2. **Export** — allow JSON export of conversations for portability?
-3. **Wake word branding** — “Hey Sightread” vs generic “Hey Agent”?
-4. **Shared history with mobile** — defer until a backend exists?
+| # | Question | Decision |
+|---|----------|----------|
+| 1 | **Provider per conversation?** | **No** — always use the provider selected in current Settings. API keys remain in `localStorage` (already persisted on Save; &lt; 5 KB, no meaningful quota impact). Conversations/images use IndexedDB. |
+| 2 | **Export conversations?** | **Yes** — JSON (backup/re-import), Markdown (readable), and PDF (share/print). Client-side download only in Phase 1d. |
+| 3 | **Wake phrase** | **“Hey Sightread”** for Phase 2c. |
+| 4 | **Shared history with mobile?** | **Deferred** until a backend exists. |
 
 ---
 
