@@ -39,8 +39,8 @@ sightread/
 ### Web (browser companion)
 
 1. `cd web/Sightread && npm install && npm run dev`
-2. Add Gemini, OpenAI, and/or Groq keys in **Settings** (stored in browser localStorage).
-3. **Start with webcam** — no Meta glasses or DAT SDK required.
+2. Add Gemini, OpenAI, and/or Groq keys in **Settings**.
+3. Use the **Agent** tab for Meta AI–style chat (text, photos, voice) or **Vision** for live webcam analysis.
 
 See [web/Sightread/README.md](web/Sightread/README.md) for build and deploy details.
 

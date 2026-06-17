@@ -41,6 +41,27 @@ export async function captureFrameAsJpeg(
   });
 }
 
+export async function fileToJpegBlob(
+  file: File,
+  options: { maxWidth: number; quality: number },
+): Promise<Blob> {
+  if (file.type.startsWith("image/")) {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    try {
+      await new Promise<void>((resolve, reject) => {
+        img.onload = () => resolve();
+        img.onerror = () => reject(new Error("Could not load image."));
+        img.src = url;
+      });
+      return captureFrameAsJpeg(img, options);
+    } finally {
+      URL.revokeObjectURL(url);
+    }
+  }
+  throw new Error("Unsupported file type. Choose an image.");
+}
+
 export async function blobToBase64(blob: Blob): Promise<string> {
   const buffer = await blob.arrayBuffer();
   const bytes = new Uint8Array(buffer);

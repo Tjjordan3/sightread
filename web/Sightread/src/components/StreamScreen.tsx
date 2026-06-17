@@ -13,13 +13,11 @@ import { ChatPanel } from "./ChatPanel";
 
 interface StreamScreenProps {
   settings: Settings;
-  onStop: () => void;
   onOpenSettings: () => void;
 }
 
 export function StreamScreen({
   settings,
-  onStop,
   onOpenSettings,
 }: StreamScreenProps) {
   const { videoRef, status, error, start, stop } = useWebcam();
@@ -53,7 +51,6 @@ export function StreamScreen({
   const handleStop = () => {
     reset();
     stop();
-    onStop();
   };
 
   const handleUpload = async (file: File) => {

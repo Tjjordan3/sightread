@@ -8,6 +8,7 @@ export interface Settings {
   analysisIntervalSec: number;
   isAIEnabled: boolean;
   isTTSEnabled: boolean;
+  speakChatReplies: boolean;
   geminiApiKey: string;
   openAIApiKey: string;
   groqApiKey: string;
@@ -21,6 +22,7 @@ const DEFAULTS: Settings = {
   analysisIntervalSec: 3,
   isAIEnabled: true,
   isTTSEnabled: false,
+  speakChatReplies: true,
   geminiApiKey: "",
   openAIApiKey: "",
   groqApiKey: "",

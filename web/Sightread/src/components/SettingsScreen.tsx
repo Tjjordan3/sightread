@@ -37,7 +37,18 @@ export function SettingsScreen({
         </label>
 
         <label className="switch-row">
-          <span>Read responses aloud</span>
+          <span>Speak agent replies in chat</span>
+          <input
+            type="checkbox"
+            checked={draft.speakChatReplies}
+            onChange={(e) =>
+              setDraft({ ...draft, speakChatReplies: e.target.checked })
+            }
+          />
+        </label>
+
+        <label className="switch-row">
+          <span>Read vision responses aloud</span>
           <input
             type="checkbox"
             checked={draft.isTTSEnabled}
