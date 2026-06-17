@@ -19,6 +19,7 @@ interface ChatComposerProps {
   onStartVoiceConversation: () => void;
   onStopVoiceConversation: () => void;
   speechSupported: boolean;
+  wakeWordHint?: string;
 }
 
 export function ChatComposer({
@@ -38,6 +39,7 @@ export function ChatComposer({
   onStartVoiceConversation,
   onStopVoiceConversation,
   speechSupported,
+  wakeWordHint,
 }: ChatComposerProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
@@ -83,6 +85,12 @@ export function ChatComposer({
             Stop
           </button>
         </div>
+      )}
+
+      {wakeWordHint && !voiceConversation && (
+        <p className="footnote chat-composer__wake-hint">
+          Wake phrase: “{wakeWordHint}”
+        </p>
       )}
 
       <div className="chat-composer__toolbar">

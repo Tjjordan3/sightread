@@ -5,21 +5,27 @@ Browser-based AI agent and vision companion for Sightread. Works as a Meta AI–
 ## Features
 
 ### Agent (Meta AI–style)
-- **Full-page agent chat** — primary tab, conversation-first UI
-- **Send photos** — attach from gallery, take a picture, or paste an image into the conversation
-- **Voice input** — microphone button uses browser speech recognition
-- **Voice chat mode** — hands-free loop: speak → agent replies → speaks back → listens again
-- **Spoken replies** — optional TTS for assistant messages (Settings)
+- **Full-page agent chat** with **persistent conversation history** (IndexedDB)
+- **Chat history drawer** — new, switch, delete conversations
+- **Export** conversations as JSON, Markdown, or PDF
+- **Send photos** — attach from gallery or take a picture
+- **Voice input**, **voice chat** loop, **always listening**, and **“Hey Sightread”** wake phrase
+- **Spoken replies** (Settings)
 
 ### Vision (Sightread live mode)
 - Webcam streaming with throttled vision analysis (Gemini / OpenAI / Groq)
 - Live AI response panel, **Analyze now**, and photo upload
 - Quick chat overlay with live camera frame attach
 
+### PWA
+- Installable on Android/desktop Chrome (`beforeinstallprompt`)
+- iOS **Add to Home Screen** guidance
+- Service worker precaches the app shell for faster loads
+- Mobile safe areas and keyboard-aware composer
+
 ### Shared
 - Same prompt presets as iOS/Android
-- Provider choice: Gemini 2.0 Flash, OpenAI GPT-4o-mini, or Groq Llama 4 Scout
-- API keys stored in browser `localStorage` (on-device only)
+- API keys in `localStorage` (on-device only)
 
 ## Quick start
 
@@ -29,11 +35,9 @@ npm install
 npm run dev
 ```
 
-Open the URL shown (typically `http://localhost:5173`).
-
-1. Go to **Settings** → add Gemini, OpenAI, and/or Groq API keys
-2. Open the **Agent** tab → chat, send photos, or tap **Voice chat**
-3. Open the **Vision** tab for live webcam scene understanding
+1. **Settings** → add API keys
+2. **Agent** tab → chat, history, photos, or voice
+3. **Vision** tab → live webcam analysis
 
 ### Production build
 
@@ -42,39 +46,29 @@ npm run build
 npm run preview
 ```
 
-Deploy the `dist/` folder to any static host (Vercel, Netlify, GitHub Pages, etc.).
+Deploy `dist/` to any static HTTPS host.
 
-## Roadmap
+## Storage
 
-Planned next steps for the Meta AI–style web experience:
+| Data | Location |
+|------|----------|
+| API keys & settings | `localStorage` |
+| Conversations & images | IndexedDB (`sightread` database) |
 
-- Conversation history persistence (IndexedDB)
-- Always-listening / improved voice session modes
-- Installable mobile PWA shell
-
-See [docs/WEB_ROADMAP.md](../../docs/WEB_ROADMAP.md) for architecture, phases, and tradeoffs.
+Use **Settings → Clear all chat history** to wipe conversations. API keys are kept unless you clear them manually.
 
 ## Browser requirements
 
 | Capability | Chrome / Edge | Safari | Firefox |
 |------------|---------------|--------|---------|
-| Agent chat + images | Yes | Yes | Yes |
+| Agent chat + history | Yes | Yes | Yes |
 | Webcam vision | Yes | Yes | Yes |
 | Speech-to-text | Yes | Yes (webkit) | Limited |
-| Text-to-speech | Yes | Yes | Yes |
+| Wake phrase | Yes | Partial | Limited |
+| PWA install | Yes | A2HS manual | Limited |
 
-- **HTTPS** required for camera/mic in production (localhost is exempt)
-- Keys from [Google AI Studio](https://aistudio.google.com/), [OpenAI](https://platform.openai.com/), and/or [Groq](https://console.groq.com/)
+HTTPS required for camera/mic in production (localhost exempt).
 
-## Differences from mobile
+## Roadmap
 
-| Feature | iOS / Android | Web |
-|--------|----------------|-----|
-| Video source | Ray-Ban Meta glasses (DAT SDK) | Webcam or image upload |
-| Agent chat | Stream overlay + dedicated chat | Full-page Agent tab |
-| Voice output | Glasses speakers (Bluetooth) | Browser speech synthesis |
-| API key storage | Keychain / Encrypted prefs | `localStorage` |
-
-## API keys
-
-Add keys in **Settings** after launch. Requests go directly from your browser to the chosen provider — no Sightread backend.
+See [docs/WEB_ROADMAP.md](../../docs/WEB_ROADMAP.md) for architecture notes. Core roadmap items are implemented in this branch; future work may include JSON import and cloud sync.

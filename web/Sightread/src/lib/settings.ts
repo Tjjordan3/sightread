@@ -9,6 +9,9 @@ export interface Settings {
   isAIEnabled: boolean;
   isTTSEnabled: boolean;
   speakChatReplies: boolean;
+  alwaysListening: boolean;
+  wakeWordEnabled: boolean;
+  silenceTimeoutMs: number;
   geminiApiKey: string;
   openAIApiKey: string;
   groqApiKey: string;
@@ -23,6 +26,9 @@ const DEFAULTS: Settings = {
   isAIEnabled: true,
   isTTSEnabled: false,
   speakChatReplies: true,
+  alwaysListening: false,
+  wakeWordEnabled: false,
+  silenceTimeoutMs: 1200,
   geminiApiKey: "",
   openAIApiKey: "",
   groqApiKey: "",
@@ -39,6 +45,10 @@ export function loadSettings(): Settings {
       analysisIntervalSec: Math.min(
         10,
         Math.max(2, parsed.analysisIntervalSec ?? DEFAULTS.analysisIntervalSec),
+      ),
+      silenceTimeoutMs: Math.min(
+        3000,
+        Math.max(600, parsed.silenceTimeoutMs ?? DEFAULTS.silenceTimeoutMs),
       ),
     };
   } catch {

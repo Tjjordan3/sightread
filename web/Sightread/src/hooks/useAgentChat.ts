@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { createChatService, type ChatMessage } from "../lib/chat";
 import { blobToBase64, captureFrameAsJpeg, fileToJpegBlob } from "../lib/imageEncoding";
 import {
@@ -16,11 +16,15 @@ export interface PendingAttachment {
 export interface UseAgentChatOptions {
   settings: Settings;
   getCurrentFrame?: () => HTMLVideoElement | null;
-  initialMessage?: ChatMessage;
+  initialMessages?: ChatMessage[];
+  onUserMessage?: (message: ChatMessage, imageBlob?: Blob) => void | Promise<void>;
+  onAssistantMessage?: (message: ChatMessage) => void | Promise<void>;
   onReplySpoken?: () => void;
+  onBeforeSpeak?: () => void;
+  onAfterSpeak?: () => void;
 }
 
-const WELCOME_MESSAGE: ChatMessage = {
+export const WELCOME_MESSAGE: ChatMessage = {
   id: "welcome",
   role: "assistant",
   text: "Hi — I'm your Sightread agent. Ask me anything, send a photo, or use voice to chat.",
@@ -29,10 +33,14 @@ const WELCOME_MESSAGE: ChatMessage = {
 export function useAgentChat({
   settings,
   getCurrentFrame,
-  initialMessage = WELCOME_MESSAGE,
+  initialMessages = [WELCOME_MESSAGE],
+  onUserMessage,
+  onAssistantMessage,
   onReplySpoken,
+  onBeforeSpeak,
+  onAfterSpeak,
 }: UseAgentChatOptions) {
-  const [messages, setMessages] = useState<ChatMessage[]>([initialMessage]);
+  const [messages, setMessages] = useState<ChatMessage[]>(initialMessages);
   const [input, setInput] = useState("");
   const [pendingAttachment, setPendingAttachment] = useState<PendingAttachment | null>(null);
   const [attachLiveFrame, setAttachLiveFrame] = useState(false);
@@ -40,6 +48,10 @@ export function useAgentChat({
   const [error, setError] = useState("");
   const [voiceConversation, setVoiceConversation] = useState(false);
   const voiceConversationRef = useRef(false);
+  const messagesRef = useRef(messages);
+  useEffect(() => {
+    messagesRef.current = messages;
+  }, [messages]);
 
   const clearAttachment = useCallback(() => {
     setPendingAttachment((prev) => {
@@ -84,11 +96,13 @@ export function useAgentChat({
       let attachedImageBase64: string | undefined;
       let attachedImageBytes: number | undefined;
       let imagePreviewUrl: string | undefined;
+      let imageBlobForStore: Blob | undefined;
 
       if (pendingAttachment) {
         attachedImageBase64 = await blobToBase64(pendingAttachment.blob);
         attachedImageBytes = pendingAttachment.blob.size;
         imagePreviewUrl = pendingAttachment.previewUrl;
+        imageBlobForStore = pendingAttachment.blob;
       } else if (attachLiveFrame && getCurrentFrame) {
         const video = getCurrentFrame();
         if (video && video.readyState >= 2) {
@@ -99,6 +113,7 @@ export function useAgentChat({
           attachedImageBase64 = await blobToBase64(blob);
           attachedImageBytes = blob.size;
           imagePreviewUrl = URL.createObjectURL(blob);
+          imageBlobForStore = blob;
         }
       }
 
@@ -109,12 +124,13 @@ export function useAgentChat({
         imagePreviewUrl,
         attachedImageBytes,
       };
-      const nextMessages = [...messages, userMessage];
+      const nextMessages = [...messagesRef.current, userMessage];
       setMessages(nextMessages);
       setPendingAttachment(null);
       setAttachLiveFrame(false);
 
       try {
+        await onUserMessage?.(userMessage, imageBlobForStore);
         const service = createChatService(settings.provider, getApiKey(settings));
         const reply = await service.chat(nextMessages, attachedImageBase64);
         const assistantMessage: ChatMessage = {
@@ -123,9 +139,12 @@ export function useAgentChat({
           text: reply,
         };
         setMessages((prev) => [...prev, assistantMessage]);
+        await onAssistantMessage?.(assistantMessage);
 
         if (settings.speakChatReplies || voiceConversationRef.current) {
+          onBeforeSpeak?.();
           await speakAsync(reply);
+          onAfterSpeak?.();
           onReplySpoken?.();
         }
       } catch (err) {
@@ -143,8 +162,11 @@ export function useAgentChat({
       getCurrentFrame,
       input,
       isSending,
-      messages,
+      onAfterSpeak,
+      onAssistantMessage,
+      onBeforeSpeak,
       onReplySpoken,
+      onUserMessage,
       pendingAttachment,
       settings,
     ],
@@ -162,6 +184,14 @@ export function useAgentChat({
     stopSpeaking();
   }, []);
 
+  const replaceMessages = useCallback((next: ChatMessage[]) => {
+    setMessages(next);
+    setInput("");
+    clearAttachment();
+    setAttachLiveFrame(false);
+    setError("");
+  }, [clearAttachment]);
+
   return {
     messages,
     input,
@@ -178,5 +208,6 @@ export function useAgentChat({
     sendMessage,
     startVoiceConversation,
     stopVoiceConversation,
+    replaceMessages,
   };
 }

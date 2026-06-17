@@ -1,6 +1,10 @@
 # Web companion roadmap
 
-Plan for evolving `web/Sightread` into a fuller Meta AI–style browser experience. This document covers three upcoming workstreams:
+Plan for evolving `web/Sightread` into a fuller Meta AI–style browser experience.
+
+**Status:** Core items below are implemented on the web branch (persistence, export, PWA shell, voice v2, “Hey Sightread” wake phrase).
+
+This document covers three workstreams:
 
 1. **Conversation history persistence**
 2. **Always-listening / wake-style voice mode**
