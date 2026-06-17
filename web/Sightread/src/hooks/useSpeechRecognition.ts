@@ -48,6 +48,8 @@ export function useSpeechRecognition(options: UseSpeechRecognitionOptions = {}) 
   const continuousRef = useRef(false);
   const startRef = useRef<(continuous?: boolean) => void>(() => {});
   const resumeRef = useRef<() => void>(() => {});
+  const lastEndMs = useRef(0);
+  const rapidRestarts = useRef(0);
 
   useEffect(() => {
     optionsRef.current = options;
@@ -104,6 +106,7 @@ export function useSpeechRecognition(options: UseSpeechRecognitionOptions = {}) 
     recognition.continuous = continuous;
 
     recognition.onstart = () => {
+      rapidRestarts.current = 0;
       setError("");
       setStatus("listening");
     };
@@ -140,11 +143,17 @@ export function useSpeechRecognition(options: UseSpeechRecognitionOptions = {}) 
       setStatus("idle");
       if (pausedRef.current) return;
       if (shouldRestartRef.current) {
+        const now = Date.now();
+        const gap = now - lastEndMs.current;
+        lastEndMs.current = now;
+        if (gap < 2500) rapidRestarts.current += 1;
+        else rapidRestarts.current = 0;
+        const delay = Math.min(2000, 500 + rapidRestarts.current * 400);
         window.setTimeout(() => {
           if (shouldRestartRef.current && !pausedRef.current) {
             startRef.current(continuousRef.current);
           }
-        }, 300);
+        }, delay);
       }
     };
 

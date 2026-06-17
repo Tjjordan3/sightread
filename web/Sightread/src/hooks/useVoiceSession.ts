@@ -11,6 +11,7 @@ export type VoiceSessionPhase =
 export interface UseVoiceSessionOptions {
   settings: Settings;
   speechSupported: boolean;
+  passiveListening: boolean;
   isSending: boolean;
   voiceConversation: boolean;
   onStartVoiceConversation: () => void;
@@ -25,6 +26,7 @@ export interface UseVoiceSessionOptions {
 export function useVoiceSession({
   settings,
   speechSupported,
+  passiveListening,
   isSending,
   voiceConversation,
   onStartVoiceConversation,
@@ -56,6 +58,7 @@ export function useVoiceSession({
   }, []);
 
   const commitBuffer = useCallback(() => {
+    clearSilenceTimer();
     const raw = transcriptBuffer.current.trim();
     transcriptBuffer.current = "";
     if (!raw) return;
@@ -71,7 +74,7 @@ export function useVoiceSession({
     }
 
     onTranscriptCommit(raw);
-  }, [onTranscriptCommit, settings.wakeWordEnabled]);
+  }, [clearSilenceTimer, onTranscriptCommit, settings.wakeWordEnabled]);
 
   const scheduleSilenceCommit = useCallback(() => {
     clearSilenceTimer();
@@ -124,7 +127,7 @@ export function useVoiceSession({
 
       if (voiceConversation || settings.alwaysListening) {
         transcriptBuffer.current = text;
-        commitBuffer();
+        scheduleSilenceCommit();
         return;
       }
 
@@ -132,9 +135,9 @@ export function useVoiceSession({
       onTranscriptCommit(text);
     },
     [
-      commitBuffer,
       onInterimTranscript,
       onTranscriptCommit,
+      scheduleSilenceCommit,
       settings.alwaysListening,
       settings.wakeWordEnabled,
       voiceConversation,
@@ -142,7 +145,7 @@ export function useVoiceSession({
   );
 
   useEffect(() => {
-    if (!speechSupported) return;
+    if (!speechSupported || !passiveListening) return;
     if (!settings.alwaysListening && !settings.wakeWordEnabled) return;
 
     const onVisibility = () => {
@@ -163,6 +166,7 @@ export function useVoiceSession({
     };
   }, [
     clearSilenceTimer,
+    passiveListening,
     settings.alwaysListening,
     settings.wakeWordEnabled,
     speechSupported,

@@ -20,6 +20,8 @@ export interface AgentChatViewProps {
   onOpenHistory?: () => void;
   title?: string;
   className?: string;
+  /** Auto-start mic for wake phrase / always listening. Off for vision quick-chat overlay. */
+  passiveListening?: boolean;
 }
 
 export function AgentChatView({
@@ -33,6 +35,7 @@ export function AgentChatView({
   onOpenHistory,
   title = "Sightread Agent",
   className = "",
+  passiveListening = false,
 }: AgentChatViewProps) {
   const listRef = useRef<HTMLDivElement>(null);
   const voiceConversationRef = useRef(false);
@@ -77,18 +80,19 @@ export function AgentChatView({
       voiceHandlersRef.current.markIdle();
     },
     onReplySpoken: () => {
-      if (!voiceConversationRef.current && !settings.alwaysListening) return;
+      if (!voiceConversationRef.current && !passiveListening) return;
       window.setTimeout(() => {
-        if (voiceConversationRef.current || settings.alwaysListening) {
+        if (voiceConversationRef.current || passiveListening) {
           resumeListeningRef.current();
         }
-      }, 500);
+      }, 800);
     },
   });
 
   const voice = useVoiceSession({
     settings,
     speechSupported: speech.isSupported,
+    passiveListening,
     isSending: chat.isSending,
     voiceConversation: chat.voiceConversation,
     onStartVoiceConversation: chat.startVoiceConversation,
@@ -117,6 +121,18 @@ export function AgentChatView({
   }, [chat.voiceConversation]);
 
   useEffect(() => {
+    if (chat.isSending) {
+      if (chat.voiceConversation || passiveListening) {
+        pauseListeningRef.current();
+      }
+      return;
+    }
+    if (passiveListening && !chat.voiceConversation) {
+      window.setTimeout(() => resumeListeningRef.current(), 400);
+    }
+  }, [chat.isSending, chat.voiceConversation, passiveListening]);
+
+  useEffect(() => {
     listRef.current?.scrollTo(0, listRef.current.scrollHeight);
   }, [chat.messages, chat.isSending]);
 
@@ -139,7 +155,7 @@ export function AgentChatView({
         ? "Thinking"
         : voice.phase === "speaking"
           ? "Speaking"
-          : settings.wakeWordEnabled
+          : passiveListening && settings.wakeWordEnabled
             ? `Say “${WAKE_PHRASE}”`
             : null;
 

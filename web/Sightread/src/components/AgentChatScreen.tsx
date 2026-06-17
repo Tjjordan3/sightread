@@ -57,6 +57,7 @@ export function AgentChatScreen({ settings }: AgentChatScreenProps) {
         onAssistantMessage={session.persistAssistantMessage}
         onOpenHistory={() => setShowHistory(true)}
         title={session.activeConversation?.title ?? "Sightread Agent"}
+        passiveListening={settings.alwaysListening || settings.wakeWordEnabled}
       />
     </div>
   );

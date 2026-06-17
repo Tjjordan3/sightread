@@ -142,6 +142,8 @@ export function useAgentChat({
           onBeforeSpeak?.();
           await speakAsync(reply);
           onAfterSpeak?.();
+        }
+        if (voiceConversationRef.current) {
           onReplySpoken?.();
         }
       } catch (err) {

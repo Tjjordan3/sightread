@@ -22,6 +22,7 @@ export function ChatPanel({
           onClose={onClose}
           title="Quick chat"
           className="agent-chat--embedded"
+          passiveListening={false}
         />
       </div>
     </div>
