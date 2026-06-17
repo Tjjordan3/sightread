@@ -69,21 +69,42 @@ export function SettingsScreen({
           </select>
         </label>
 
-        <label className="field">
-          <span>Prompt preset</span>
-          <select
-            value={draft.selectedPromptId}
+        <label className="switch-row">
+          <span>Smart prompts (recommended)</span>
+          <input
+            type="checkbox"
+            checked={draft.promptMode === "auto"}
             onChange={(e) =>
-              setDraft({ ...draft, selectedPromptId: e.target.value })
+              setDraft({
+                ...draft,
+                promptMode: e.target.checked ? "auto" : "manual",
+              })
             }
-          >
-            {PROMPT_PRESETS.map((preset) => (
-              <option key={preset.id} value={preset.id}>
-                {preset.title}
-              </option>
-            ))}
-          </select>
+          />
         </label>
+        <p className="footnote">
+          {draft.promptMode === "auto"
+            ? "Sightread picks the best vision prompt automatically — no preset to choose."
+            : "Choose a fixed preset for live vision and photo analysis."}
+        </p>
+
+        {draft.promptMode === "manual" && (
+          <label className="field">
+            <span>Prompt preset</span>
+            <select
+              value={draft.selectedPromptId}
+              onChange={(e) =>
+                setDraft({ ...draft, selectedPromptId: e.target.value })
+              }
+            >
+              {PROMPT_PRESETS.map((preset) => (
+                <option key={preset.id} value={preset.id}>
+                  {preset.title}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
 
         <label className="field">
           <span>Analyze every {draft.analysisIntervalSec}s</span>

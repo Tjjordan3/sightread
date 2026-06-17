@@ -1,6 +1,6 @@
 import { useCallback, useRef, useState } from "react";
 import { blobToBase64, captureFrameAsJpeg } from "../lib/imageEncoding";
-import { getApiKey, getSelectedPrompt, hasApiKeyForProvider, type Settings } from "../lib/settings";
+import { getApiKey, getVisionPrompt, hasApiKeyForProvider, type Settings } from "../lib/settings";
 import { speak, stopSpeaking } from "../lib/speech";
 import { createVisionService } from "../lib/vision";
 
@@ -66,12 +66,11 @@ export function useAIAnalysis(settings: Settings) {
           settings.provider,
           getApiKey(settings),
         );
-        const prompt = getSelectedPrompt(settings).prompt;
-        const result = await service.analyze(base64, prompt);
+        const visionPrompt = getVisionPrompt(settings);
+        const result = await service.analyze(base64, visionPrompt.prompt);
         if (controller.signal.aborted) return;
 
-        const title =
-          getSelectedPrompt(settings).title + (manual ? " (now)" : "");
+        const title = visionPrompt.title + (manual ? " (now)" : "");
         setState((prev) => ({
           analysisState: "idle",
           latestResponse: result,

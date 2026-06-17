@@ -1,9 +1,15 @@
-import { getPromptPreset } from "./promptPresets";
+import {
+  getPromptPreset,
+  resolveVisionPrompt,
+  type PromptMode,
+  type ResolvedVisionPrompt,
+} from "./promptPresets";
 
 export type AIProvider = "gemini" | "openai" | "groq";
 
 export interface Settings {
   provider: AIProvider;
+  promptMode: PromptMode;
   selectedPromptId: string;
   analysisIntervalSec: number;
   isAIEnabled: boolean;
@@ -21,6 +27,7 @@ const STORAGE_KEY = "sightread_settings";
 
 const DEFAULTS: Settings = {
   provider: "gemini",
+  promptMode: "auto",
   selectedPromptId: "scene",
   analysisIntervalSec: 3,
   isAIEnabled: true,
@@ -42,6 +49,7 @@ export function loadSettings(): Settings {
     return {
       ...DEFAULTS,
       ...parsed,
+      promptMode: parsed.promptMode === "manual" ? "manual" : "auto",
       analysisIntervalSec: Math.min(
         10,
         Math.max(2, parsed.analysisIntervalSec ?? DEFAULTS.analysisIntervalSec),
@@ -76,6 +84,17 @@ export function hasApiKeyForProvider(
 
 export function getSelectedPrompt(settings: Settings) {
   return getPromptPreset(settings.selectedPromptId);
+}
+
+export function getVisionPrompt(
+  settings: Settings,
+  context?: { userText?: string },
+): ResolvedVisionPrompt {
+  return resolveVisionPrompt(
+    settings.promptMode,
+    settings.selectedPromptId,
+    context,
+  );
 }
 
 export function getApiKey(settings: Settings): string {

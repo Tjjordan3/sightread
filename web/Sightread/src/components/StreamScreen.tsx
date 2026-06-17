@@ -2,11 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useAIAnalysis } from "../hooks/useAIAnalysis";
 import { useWebcam } from "../hooks/useSettings";
 import { blobToBase64, captureFrameAsJpeg } from "../lib/imageEncoding";
-import {
-  getApiKey,
-  getSelectedPrompt,
-  type Settings,
-} from "../lib/settings";
+import { getApiKey, getVisionPrompt, type Settings } from "../lib/settings";
 import { createVisionService } from "../lib/vision";
 import { AIResponsePanel } from "./AIResponsePanel";
 import { ChatPanel } from "./ChatPanel";
@@ -71,10 +67,8 @@ export function StreamScreen({
       URL.revokeObjectURL(url);
       const base64 = await blobToBase64(blob);
       const service = createVisionService(settings.provider, getApiKey(settings));
-      const result = await service.analyze(
-        base64,
-        getSelectedPrompt(settings).prompt,
-      );
+      const visionPrompt = getVisionPrompt(settings);
+      const result = await service.analyze(base64, visionPrompt.prompt);
       setUploadResult(result);
     } catch (err) {
       setUploadError(
@@ -149,7 +143,7 @@ export function StreamScreen({
         {status === "live" && (
           <AIResponsePanel
             aiState={displayState}
-            promptTitle={getSelectedPrompt(settings).title}
+            promptTitle={getVisionPrompt(settings).title}
             ttsEnabled={settings.isTTSEnabled}
           />
         )}

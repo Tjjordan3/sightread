@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useRef, type ClipboardEvent } from "react";
 import type { PendingAttachment } from "../hooks/useAgentChat";
 import type { SpeechRecognitionStatus } from "../hooks/useSpeechRecognition";
 
@@ -46,6 +46,19 @@ export function ChatComposer({
 
   const canSend =
     !isSending && (input.trim().length > 0 || pendingAttachment != null || attachLiveFrame);
+
+  const handlePaste = (e: ClipboardEvent<HTMLInputElement>) => {
+    const items = e.clipboardData?.items;
+    if (!items) return;
+    for (const item of items) {
+      if (!item.type.startsWith("image/")) continue;
+      const file = item.getAsFile();
+      if (!file) continue;
+      e.preventDefault();
+      onAttachFile(file);
+      return;
+    }
+  };
 
   return (
     <div className="chat-composer">
@@ -136,9 +149,12 @@ export function ChatComposer({
           type="text"
           value={input}
           placeholder={
-            speechStatus === "listening" ? "Listening…" : "Message your agent…"
+            speechStatus === "listening"
+              ? "Listening…"
+              : "Message your agent… (paste images)"
           }
           onChange={(e) => onInputChange(e.target.value)}
+          onPaste={handlePaste}
           onKeyDown={(e) => {
             if (e.key === "Enter") onSend();
           }}
