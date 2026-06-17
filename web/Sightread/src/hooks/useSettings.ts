@@ -35,6 +35,13 @@ export function useWebcam() {
   const start = useCallback(async () => {
     setStatus("starting");
     setError("");
+    if (!navigator.mediaDevices?.getUserMedia) {
+      setStatus("error");
+      setError(
+        "Camera requires HTTPS. Open the app via your Tailscale https://…ts.net URL, not http://100.x.x.x.",
+      );
+      return;
+    }
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
         video: {

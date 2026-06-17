@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { createId } from "../lib/uuid";
 import { createChatService, type ChatMessage } from "../lib/chat";
 import { blobToBase64, captureFrameAsJpeg, fileToJpegBlob } from "../lib/imageEncoding";
 import { hasApiKeyForProvider, type Settings } from "../lib/settings";
@@ -114,7 +115,7 @@ export function useAgentChat({
       }
 
       const userMessage: ChatMessage = {
-        id: crypto.randomUUID(),
+        id: createId(),
         role: "user",
         text: text || "What do you see in this image?",
         imagePreviewUrl,
@@ -130,7 +131,7 @@ export function useAgentChat({
         const service = createChatService(settings);
         const reply = await service.chat(nextMessages, attachedImageBase64);
         const assistantMessage: ChatMessage = {
-          id: crypto.randomUUID(),
+          id: createId(),
           role: "assistant",
           text: reply,
         };

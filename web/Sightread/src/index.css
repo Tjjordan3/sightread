@@ -714,6 +714,12 @@ select {
   font-size: 0.85rem;
 }
 
+.insecure-banner {
+  background: var(--error-banner-bg);
+  color: var(--error-banner-text);
+  text-align: center;
+}
+
 .agent-chat-screen--loading {
   display: grid;
   place-items: center;

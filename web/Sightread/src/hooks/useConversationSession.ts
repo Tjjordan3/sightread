@@ -1,4 +1,6 @@
+import { useCallback, useEffect, useState } from "react";
 import type { ChatMessage } from "../lib/chat";
+import { createId } from "../lib/uuid";
 import {
   createConversation,
   getConversation,
@@ -17,7 +19,6 @@ import {
   storedMessagesToChatMessages,
 } from "../lib/storage/export";
 import type { StoredConversation } from "../lib/storage/types";
-import { useCallback, useEffect, useState } from "react";
 
 const WELCOME_MESSAGE: ChatMessage = {
   id: "welcome",
@@ -118,7 +119,7 @@ export function useConversationSession() {
       if (!activeConversation || message.id === "welcome") return;
       let imageId: string | undefined;
       if (imageBlob) {
-        imageId = crypto.randomUUID();
+        imageId = createId();
         await saveImage({
           id: imageId,
           conversationId: activeConversation.id,

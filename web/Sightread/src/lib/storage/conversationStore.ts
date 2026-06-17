@@ -1,4 +1,5 @@
 import { openDB, type DBSchema, type IDBPDatabase } from "idb";
+import { createId } from "../uuid";
 import type { StoredConversation, StoredImage, StoredMessage } from "./types";
 import { STORAGE_LIMITS } from "./types";
 
@@ -81,7 +82,7 @@ export async function createConversation(title = "New chat"): Promise<StoredConv
   await enforceConversationLimit(db);
   const now = Date.now();
   const conversation: StoredConversation = {
-    id: crypto.randomUUID(),
+    id: createId(),
     title,
     createdAt: now,
     updatedAt: now,

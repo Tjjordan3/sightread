@@ -2,6 +2,7 @@ import { useState } from "react";
 import { AgentChatScreen } from "./components/AgentChatScreen";
 import { AppShell, type AppTab } from "./components/AppShell";
 import { InstallPrompt } from "./components/InstallPrompt";
+import { InsecureContextBanner } from "./components/InsecureContextBanner";
 import { SettingsScreen } from "./components/SettingsScreen";
 import { StreamScreen } from "./components/StreamScreen";
 import { useKeyboardViewportOffset } from "./hooks/useKeyboardViewport";
@@ -40,6 +41,7 @@ function App() {
 
   return (
     <>
+      <InsecureContextBanner />
       <InstallPrompt />
       <AppShell activeTab={tab} onTabChange={setTab}>
         {content}
