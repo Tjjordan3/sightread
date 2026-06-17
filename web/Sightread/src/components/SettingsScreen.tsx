@@ -4,6 +4,7 @@ import { testNvidiaConnection } from "../lib/nvidia/request";
 import { PROMPT_PRESETS } from "../lib/promptPresets";
 import { AI_PROVIDERS } from "../lib/providers";
 import type { Settings } from "../lib/settings";
+import { unlockSpeech } from "../lib/speech";
 import { WAKE_PHRASE } from "../lib/voice/wakeWord";
 
 interface SettingsScreenProps {
@@ -100,7 +101,10 @@ export function SettingsScreen({
           <input
             type="checkbox"
             checked={settings.isTTSEnabled}
-            onChange={(e) => onUpdate({ isTTSEnabled: e.target.checked })}
+            onChange={(e) => {
+              onUpdate({ isTTSEnabled: e.target.checked });
+              if (e.target.checked) unlockSpeech();
+            }}
           />
         </label>
 

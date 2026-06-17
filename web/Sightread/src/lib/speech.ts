@@ -1,4 +1,6 @@
 let resumeTimer: number | null = null;
+let unlockedUntil = 0;
+let lastSpokenText = "";
 
 function clearResumeTimer(): void {
   if (resumeTimer != null) {
@@ -15,6 +17,24 @@ function primeVoices(): void {
 if (typeof window !== "undefined" && "speechSynthesis" in window) {
   primeVoices();
   window.speechSynthesis.addEventListener("voiceschanged", primeVoices);
+}
+
+/** Browsers (especially iOS) block TTS until the user interacts with the page. */
+export function unlockSpeech(): void {
+  if (!("speechSynthesis" in window)) return;
+  unlockedUntil = Date.now() + 30 * 60 * 1000;
+  primeVoices();
+  const synth = window.speechSynthesis;
+  synth.resume();
+  const prime = new SpeechSynthesisUtterance("\u200b");
+  prime.volume = 0.01;
+  prime.rate = 2;
+  configureUtterance(prime);
+  synth.speak(prime);
+}
+
+export function isSpeechUnlocked(): boolean {
+  return Date.now() < unlockedUntil;
 }
 
 function pickVoice(): SpeechSynthesisVoice | null {
@@ -38,6 +58,13 @@ function configureUtterance(utterance: SpeechSynthesisUtterance): void {
   utterance.rate = 1;
 }
 
+function beginSpeaking(utterance: SpeechSynthesisUtterance): void {
+  const synth = window.speechSynthesis;
+  synth.resume();
+  if (synth.paused) synth.resume();
+  synth.speak(utterance);
+}
+
 /** iOS Safari pauses synthesis after ~15s unless resumed periodically. */
 function startResumeHack(): void {
   clearResumeTimer();
@@ -49,47 +76,51 @@ function startResumeHack(): void {
 }
 
 export function speak(text: string): void {
-  if (!("speechSynthesis" in window) || !text.trim()) return;
-  primeVoices();
-  stopSpeaking();
-  window.setTimeout(() => {
-    const utterance = new SpeechSynthesisUtterance(text);
-    configureUtterance(utterance);
-    startResumeHack();
-    window.speechSynthesis.speak(utterance);
-    utterance.onend = () => clearResumeTimer();
-    utterance.onerror = () => clearResumeTimer();
-  }, 50);
+  void speakAsync(text, { force: true });
 }
 
-export function speakAsync(text: string): Promise<void> {
+export function speakAsync(
+  text: string,
+  options: { force?: boolean } = {},
+): Promise<boolean> {
   return new Promise((resolve) => {
     if (!("speechSynthesis" in window) || !text.trim()) {
-      resolve();
+      resolve(false);
       return;
     }
+
+    const trimmed = text.trim();
+    if (
+      !options.force &&
+      trimmed === lastSpokenText &&
+      window.speechSynthesis.speaking
+    ) {
+      resolve(true);
+      return;
+    }
+
     primeVoices();
+    lastSpokenText = trimmed;
     stopSpeaking();
 
     window.setTimeout(() => {
       let settled = false;
-      const finish = () => {
+      const finish = (ok: boolean) => {
         if (settled) return;
         settled = true;
         clearResumeTimer();
-        resolve();
+        resolve(ok);
       };
 
-      const utterance = new SpeechSynthesisUtterance(text);
+      const utterance = new SpeechSynthesisUtterance(trimmed);
       configureUtterance(utterance);
-      utterance.onend = finish;
-      utterance.onerror = finish;
+      utterance.onend = () => finish(true);
+      utterance.onerror = () => finish(false);
       startResumeHack();
-      window.speechSynthesis.speak(utterance);
+      beginSpeaking(utterance);
 
-      // Chrome occasionally skips onend; cap wait by text length.
-      const fallbackMs = Math.min(60000, Math.max(3000, text.length * 80));
-      window.setTimeout(finish, fallbackMs);
+      const fallbackMs = Math.min(60000, Math.max(3000, trimmed.length * 80));
+      window.setTimeout(() => finish(true), fallbackMs);
     }, 50);
   });
 }
@@ -106,5 +137,5 @@ export function isSpeechSupported(): boolean {
 }
 
 export function warmUpSpeech(): void {
-  primeVoices();
+  unlockSpeech();
 }

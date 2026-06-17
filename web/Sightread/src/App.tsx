@@ -5,6 +5,7 @@ import { InstallPrompt } from "./components/InstallPrompt";
 import { InsecureContextBanner } from "./components/InsecureContextBanner";
 import { SettingsScreen } from "./components/SettingsScreen";
 import { StreamScreen } from "./components/StreamScreen";
+import { unlockSpeech } from "./lib/speech";
 import { useKeyboardViewportOffset } from "./hooks/useKeyboardViewport";
 import { useTheme } from "./hooks/useTheme";
 import { useSettings } from "./hooks/useSettings";
@@ -37,7 +38,13 @@ function App() {
     <>
       <InsecureContextBanner />
       <InstallPrompt />
-      <AppShell activeTab={tab} onTabChange={setTab}>
+      <AppShell
+        activeTab={tab}
+        onTabChange={(next) => {
+          if (next === "vision") unlockSpeech();
+          setTab(next);
+        }}
+      >
         {content}
       </AppShell>
     </>

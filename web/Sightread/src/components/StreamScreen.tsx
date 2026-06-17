@@ -3,6 +3,7 @@ import { useAIAnalysis } from "../hooks/useAIAnalysis";
 import { useWebcam } from "../hooks/useSettings";
 import { blobToBase64, captureFrameAsJpeg } from "../lib/imageEncoding";
 import { getVisionPrompt, type Settings } from "../lib/settings";
+import { speakAsync, unlockSpeech } from "../lib/speech";
 import { createVisionService } from "../lib/vision";
 import { AIResponsePanel } from "./AIResponsePanel";
 import { ChatPanel } from "./ChatPanel";
@@ -17,7 +18,8 @@ export function StreamScreen({
   onOpenSettings,
 }: StreamScreenProps) {
   const { videoRef, status, error, start, stop } = useWebcam();
-  const { state, processFrame, analyzeNow, reset } = useAIAnalysis(settings);
+  const { state, processFrame, analyzeNow, replayLatest, reset } =
+    useAIAnalysis(settings);
   const [showChat, setShowChat] = useState(false);
   const [uploadError, setUploadError] = useState("");
   const [uploadResult, setUploadResult] = useState<string | null>(null);
@@ -49,7 +51,13 @@ export function StreamScreen({
     stop();
   };
 
+  const handleReadAloud = () => {
+    unlockSpeech();
+    void replayLatest();
+  };
+
   const handleUpload = async (file: File) => {
+    unlockSpeech();
     setUploadError("");
     setUploadResult(null);
     try {
@@ -70,6 +78,9 @@ export function StreamScreen({
       const visionPrompt = getVisionPrompt(settings);
       const result = await service.analyze(base64, visionPrompt.prompt);
       setUploadResult(result);
+      if (settings.isTTSEnabled) {
+        void speakAsync(result, { force: true });
+      }
     } catch (err) {
       setUploadError(
         err instanceof Error ? err.message : "Image analysis failed.",
@@ -116,7 +127,10 @@ export function StreamScreen({
             <button
               type="button"
               className="icon-button"
-              onClick={() => fileInputRef.current?.click()}
+              onClick={() => {
+                unlockSpeech();
+                fileInputRef.current?.click();
+              }}
               aria-label="Upload photo"
             >
               🖼
@@ -145,6 +159,7 @@ export function StreamScreen({
             aiState={displayState}
             promptTitle={getVisionPrompt(settings).title}
             ttsEnabled={settings.isTTSEnabled}
+            onReadAloud={settings.isTTSEnabled ? handleReadAloud : undefined}
           />
         )}
 
@@ -154,6 +169,7 @@ export function StreamScreen({
             className="btn btn--secondary"
             disabled={status !== "live"}
             onClick={() => {
+              unlockSpeech();
               setUploadResult(null);
               analyzeNow(videoRef.current);
             }}

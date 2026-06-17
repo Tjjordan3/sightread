@@ -403,6 +403,15 @@ select {
   overflow: hidden;
 }
 
+.ai-panel--speakable {
+  cursor: pointer;
+}
+
+.ai-panel--speakable:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
 .ai-panel__meta {
   margin: 8px 0 0;
   font-size: 0.75rem;

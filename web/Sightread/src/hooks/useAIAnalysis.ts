@@ -1,7 +1,7 @@
 import { useCallback, useRef, useState } from "react";
 import { blobToBase64, captureFrameAsJpeg } from "../lib/imageEncoding";
 import { getVisionPrompt, hasApiKeyForProvider, type Settings } from "../lib/settings";
-import { speak, stopSpeaking } from "../lib/speech";
+import { isSpeechUnlocked, speakAsync, stopSpeaking } from "../lib/speech";
 import { createVisionService } from "../lib/vision";
 
 export type AnalysisState = "idle" | "running" | "error";
@@ -17,6 +17,7 @@ export interface AIUiState {
   latestResponse: string;
   errorMessage: string;
   responses: AIResponseEntry[];
+  ttsNeedsTap: boolean;
 }
 
 const INITIAL_STATE: AIUiState = {
@@ -24,6 +25,7 @@ const INITIAL_STATE: AIUiState = {
   latestResponse: "",
   errorMessage: "",
   responses: [],
+  ttsNeedsTap: false,
 };
 
 export function useAIAnalysis(settings: Settings) {
@@ -33,6 +35,32 @@ export function useAIAnalysis(settings: Settings) {
   const isProcessing = useRef(false);
   const didShowMissingKeyError = useRef(false);
   const abortRef = useRef<AbortController | null>(null);
+  const lastSpokenRef = useRef("");
+  const latestResponseRef = useRef("");
+
+  const speakVisionResult = useCallback(
+    async (result: string, manual: boolean) => {
+      if (!settings.isTTSEnabled || !result.trim()) return;
+      if (result === lastSpokenRef.current && !manual) return;
+
+      const maySpeak = manual || isSpeechUnlocked();
+      if (!maySpeak) {
+        setState((prev) => ({ ...prev, ttsNeedsTap: true }));
+        return;
+      }
+
+      lastSpokenRef.current = result;
+      setState((prev) => ({ ...prev, ttsNeedsTap: false }));
+      await speakAsync(result, { force: manual });
+    },
+    [settings.isTTSEnabled],
+  );
+
+  const replayLatest = useCallback(async () => {
+    const text = latestResponseRef.current;
+    if (!text.trim()) return;
+    await speakVisionResult(text, true);
+  }, [speakVisionResult]);
 
   const reset = useCallback(() => {
     abortRef.current?.abort();
@@ -70,17 +98,19 @@ export function useAIAnalysis(settings: Settings) {
         if (controller.signal.aborted) return;
 
         const title = visionPrompt.title + (manual ? " (now)" : "");
+        latestResponseRef.current = result;
         setState((prev) => ({
           analysisState: "idle",
           latestResponse: result,
           errorMessage: "",
+          ttsNeedsTap: false,
           responses: [
             { text: result, promptTitle: title, timestampMs: Date.now() },
             ...prev.responses,
           ].slice(0, 10),
         }));
 
-        if (settings.isTTSEnabled) speak(result);
+        void speakVisionResult(result, manual);
         backoffMs.current = 0;
       } catch (err) {
         if (controller.signal.aborted) return;
@@ -104,7 +134,7 @@ export function useAIAnalysis(settings: Settings) {
         isProcessing.current = false;
       }
     },
-    [settings],
+    [settings, speakVisionResult],
   );
 
   const processFrame = useCallback(
@@ -146,7 +176,7 @@ export function useAIAnalysis(settings: Settings) {
     [runAnalysis],
   );
 
-  return { state, processFrame, analyzeNow, reset };
+  return { state, processFrame, analyzeNow, replayLatest, reset };
 }
 
 function isRateLimitError(message: string): boolean {
