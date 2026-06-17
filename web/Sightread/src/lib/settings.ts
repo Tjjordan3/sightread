@@ -4,8 +4,16 @@ import {
   type PromptMode,
   type ResolvedVisionPrompt,
 } from "./promptPresets";
+import {
+  getAIAccessHint,
+  hasAIAccess,
+  hasLocalApiKey,
+  isBackendConfigured,
+  usesBackendRoute,
+} from "./ai/access";
 
 export type AIProvider = "gemini" | "openai" | "groq";
+export type ApiAccessMode = "local" | "backend" | "auto";
 
 export interface Settings {
   provider: AIProvider;
@@ -18,12 +26,20 @@ export interface Settings {
   alwaysListening: boolean;
   wakeWordEnabled: boolean;
   silenceTimeoutMs: number;
+  apiAccessMode: ApiAccessMode;
+  /** @deprecated use apiAccessMode */
+  useBackend?: boolean;
+  backendUrl: string;
+  backendToken: string;
   geminiApiKey: string;
   openAIApiKey: string;
   groqApiKey: string;
 }
 
 const STORAGE_KEY = "sightread_settings";
+
+const CONCEPT_BACKEND_DEFAULT =
+  import.meta.env.VITE_CONCEPT_BACKEND_DEFAULT === "true";
 
 const DEFAULTS: Settings = {
   provider: "gemini",
@@ -36,10 +52,25 @@ const DEFAULTS: Settings = {
   alwaysListening: false,
   wakeWordEnabled: false,
   silenceTimeoutMs: 1200,
+  apiAccessMode: CONCEPT_BACKEND_DEFAULT ? "auto" : "local",
+  backendUrl: import.meta.env.VITE_CONCEPT_BACKEND_URL ?? "http://localhost:8787",
+  backendToken: import.meta.env.VITE_CONCEPT_BACKEND_TOKEN ?? "",
   geminiApiKey: "",
   openAIApiKey: "",
   groqApiKey: "",
 };
+
+function parseApiAccessMode(parsed: Partial<Settings>): ApiAccessMode {
+  if (
+    parsed.apiAccessMode === "local" ||
+    parsed.apiAccessMode === "backend" ||
+    parsed.apiAccessMode === "auto"
+  ) {
+    return parsed.apiAccessMode;
+  }
+  if (parsed.useBackend) return "backend";
+  return DEFAULTS.apiAccessMode;
+}
 
 export function loadSettings(): Settings {
   try {
@@ -49,6 +80,7 @@ export function loadSettings(): Settings {
     return {
       ...DEFAULTS,
       ...parsed,
+      apiAccessMode: parseApiAccessMode(parsed),
       promptMode: parsed.promptMode === "manual" ? "manual" : "auto",
       analysisIntervalSec: Math.min(
         10,
@@ -68,18 +100,25 @@ export function saveSettings(settings: Settings): void {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
 }
 
+export {
+  getAIAccessHint,
+  hasAIAccess,
+  hasLocalApiKey,
+  isBackendConfigured,
+  usesBackendRoute,
+};
+
+/** @deprecated use hasAIAccess */
+export function isBackendMode(settings: Settings): boolean {
+  return settings.apiAccessMode === "backend" && isBackendConfigured(settings);
+}
+
+/** @deprecated use hasAIAccess */
 export function hasApiKeyForProvider(
   settings: Settings,
   provider: AIProvider = settings.provider,
 ): boolean {
-  switch (provider) {
-    case "gemini":
-      return settings.geminiApiKey.trim().length > 0;
-    case "openai":
-      return settings.openAIApiKey.trim().length > 0;
-    case "groq":
-      return settings.groqApiKey.trim().length > 0;
-  }
+  return hasAIAccess(settings, provider);
 }
 
 export function getSelectedPrompt(settings: Settings) {

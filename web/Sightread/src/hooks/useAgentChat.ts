@@ -2,8 +2,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { createChatService, type ChatMessage } from "../lib/chat";
 import { blobToBase64, captureFrameAsJpeg, fileToJpegBlob } from "../lib/imageEncoding";
 import {
-  getApiKey,
-  hasApiKeyForProvider,
+  getAIAccessHint,
+  hasAIAccess,
   type Settings,
 } from "../lib/settings";
 import { speakAsync, stopSpeaking } from "../lib/speech";
@@ -84,8 +84,8 @@ export function useAgentChat({
       const hasAttachment = pendingAttachment != null || attachLiveFrame;
       if ((!text && !hasAttachment) || isSending) return;
 
-      if (!hasApiKeyForProvider(settings)) {
-        setError("Add API key in Settings.");
+      if (!hasAIAccess(settings)) {
+        setError(getAIAccessHint(settings));
         return;
       }
 
@@ -131,7 +131,7 @@ export function useAgentChat({
 
       try {
         await onUserMessage?.(userMessage, imageBlobForStore);
-        const service = createChatService(settings.provider, getApiKey(settings));
+        const service = createChatService(settings);
         const reply = await service.chat(nextMessages, attachedImageBase64);
         const assistantMessage: ChatMessage = {
           id: crypto.randomUUID(),

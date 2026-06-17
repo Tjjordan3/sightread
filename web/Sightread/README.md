@@ -26,6 +26,7 @@ Browser-based AI agent and vision companion for Sightread. Works as a Meta AI–
 ### Shared
 - Same prompt presets as iOS/Android
 - API keys in `localStorage` (on-device only)
+- **Optional API access modes** — local, backend proxy, or auto (backend first with local fallback). See [docs/BACKEND_CONCEPT.md](../../docs/BACKEND_CONCEPT.md).
 
 ## Quick start
 

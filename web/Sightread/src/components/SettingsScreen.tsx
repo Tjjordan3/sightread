@@ -1,7 +1,9 @@
 import { useState } from "react";
+import { fetchBackendMeta, fetchBackendProviders } from "../lib/backend/client";
 import { clearChatHistory } from "../lib/clearChatHistory";
 import { PROMPT_PRESETS } from "../lib/promptPresets";
-import type { Settings } from "../lib/settings";
+import type { ApiAccessMode, Settings } from "../lib/settings";
+import { isBackendConfigured } from "../lib/settings";
 import { WAKE_PHRASE } from "../lib/voice/wakeWord";
 
 interface SettingsScreenProps {
@@ -18,6 +20,27 @@ export function SettingsScreen({
   onHistoryCleared,
 }: SettingsScreenProps) {
   const [draft, setDraft] = useState<Settings>(initial);
+  const [backendStatus, setBackendStatus] = useState("");
+
+  const testBackend = async () => {
+    if (!isBackendConfigured(draft)) {
+      setBackendStatus("Set backend URL and device token first.");
+      return;
+    }
+    setBackendStatus("Checking…");
+    try {
+      const meta = await fetchBackendMeta(draft);
+      const providers = await fetchBackendProviders(draft);
+      const available = providers.available.join(", ") || "none";
+      setBackendStatus(
+        `Connected to ${meta.service} v${meta.version}. Available providers: ${available}.`,
+      );
+    } catch (err) {
+      setBackendStatus(
+        err instanceof Error ? err.message : "Could not reach backend.",
+      );
+    }
+  };
 
   return (
     <div className="screen settings-screen">
@@ -174,6 +197,70 @@ export function SettingsScreen({
           />
         </label>
 
+        <h3 className="settings-section-title">API access</h3>
+        <label className="field">
+          <span>Routing mode</span>
+          <select
+            value={draft.apiAccessMode}
+            onChange={(e) =>
+              setDraft({
+                ...draft,
+                apiAccessMode: e.target.value as ApiAccessMode,
+              })
+            }
+          >
+            <option value="local">Local only — browser API keys</option>
+            <option value="backend">Backend only — concept server</option>
+            <option value="auto">Auto — backend first, fallback to local keys</option>
+          </select>
+        </label>
+        <p className="footnote">
+          {draft.apiAccessMode === "local" &&
+            "Calls go directly from this browser to Gemini, OpenAI, or Groq."}
+          {draft.apiAccessMode === "backend" &&
+            "All AI calls route through the concept backend. Server keys are used when set; otherwise your local keys are forwarded securely in the request."}
+          {draft.apiAccessMode === "auto" &&
+            "Tries the concept backend first. If it fails, falls back to local API keys in this browser."}
+        </p>
+
+        {draft.apiAccessMode !== "local" && (
+          <>
+            <label className="field">
+              <span>Backend URL</span>
+              <input
+                type="url"
+                value={draft.backendUrl}
+                onChange={(e) =>
+                  setDraft({ ...draft, backendUrl: e.target.value })
+                }
+                placeholder="/api/concept or http://localhost:8787"
+              />
+            </label>
+            <label className="field">
+              <span>Device token</span>
+              <input
+                type="password"
+                autoComplete="off"
+                value={draft.backendToken}
+                onChange={(e) =>
+                  setDraft({ ...draft, backendToken: e.target.value })
+                }
+                placeholder="Matches SIGHTREAD_CONCEPT_TOKEN"
+              />
+            </label>
+            <button
+              type="button"
+              className="btn btn--secondary"
+              onClick={() => void testBackend()}
+            >
+              Test backend connection
+            </button>
+            {backendStatus && (
+              <p className="footnote">{backendStatus}</p>
+            )}
+          </>
+        )}
+
         <h3 className="settings-section-title">API keys</h3>
         <label className="field">
           <span>Gemini API key</span>
@@ -215,8 +302,9 @@ export function SettingsScreen({
         </label>
 
         <p className="footnote">
-          Keys are stored in this browser only (localStorage). They are sent
-          directly to Gemini, OpenAI, or Groq from your device.
+          {draft.apiAccessMode === "local"
+            ? "Keys stay in this browser (localStorage) and are sent directly to providers."
+            : "Local keys are optional when using the backend. If the server lacks a provider key, yours are forwarded only for that request (BYOK-through-proxy)."}
         </p>
 
         <h3 className="settings-section-title">Data</h3>

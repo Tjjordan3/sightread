@@ -1,6 +1,6 @@
 import { useCallback, useRef, useState } from "react";
 import { blobToBase64, captureFrameAsJpeg } from "../lib/imageEncoding";
-import { getApiKey, getVisionPrompt, hasApiKeyForProvider, type Settings } from "../lib/settings";
+import { getAIAccessHint, getVisionPrompt, hasAIAccess, type Settings } from "../lib/settings";
 import { speak, stopSpeaking } from "../lib/speech";
 import { createVisionService } from "../lib/vision";
 
@@ -62,10 +62,7 @@ export function useAIAnalysis(settings: Settings) {
           quality: manual ? 0.75 : 0.6,
         });
         const base64 = await blobToBase64(blob);
-        const service = createVisionService(
-          settings.provider,
-          getApiKey(settings),
-        );
+        const service = createVisionService(settings);
         const visionPrompt = getVisionPrompt(settings);
         const result = await service.analyze(base64, visionPrompt.prompt);
         if (controller.signal.aborted) return;
@@ -102,13 +99,13 @@ export function useAIAnalysis(settings: Settings) {
       if (!video || video.readyState < 2) return;
       if (!settings.isAIEnabled) return;
 
-      if (!hasApiKeyForProvider(settings)) {
+      if (!hasAIAccess(settings)) {
         if (!didShowMissingKeyError.current) {
           didShowMissingKeyError.current = true;
           setState((prev) => ({
             ...prev,
             analysisState: "error",
-            errorMessage: "Add API key in Settings.",
+            errorMessage: getAIAccessHint(settings),
           }));
         }
         return;

@@ -7,6 +7,9 @@ ios/**/xcuserdata/
 .env
 *.pem
 
+# Local concept backend (not shipped)
+concept-backend/
+
 # OS
 .DS_Store
 Thumbs.db
