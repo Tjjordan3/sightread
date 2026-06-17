@@ -27,6 +27,7 @@ sightread/
   docs/              Setup, developer mode, sample prompts
   ios/Sightread/     Xcode project (SwiftUI + DAT SDK 0.7)
   android/Sightread/ Gradle project (Compose + DAT SDK 0.7)
+  web/Sightread/     Browser companion (Vite + React + webcam)
 ```
 
 ### Android
@@ -34,6 +35,14 @@ sightread/
 1. Add `github_token=YOUR_GITHUB_PAT` to `android/Sightread/local.properties` (read access to `meta-wearables-dat-android`).
 2. Open `android/Sightread` in Android Studio.
 3. Same Meta AI Developer Mode and API key setup as iOS (Settings in app).
+
+### Web (browser companion)
+
+1. `cd web/Sightread && npm install && npm run dev`
+2. Add Gemini/OpenAI keys in **Settings** (stored in browser localStorage).
+3. **Start with webcam** — no Meta glasses or DAT SDK required.
+
+See [web/Sightread/README.md](web/Sightread/README.md) for build and deploy details.
 
 ## Requirements
 
@@ -46,6 +55,7 @@ sightread/
 Sightread does **not** require AI keys at build time. Add keys in-app:
 - iOS: **Settings** → paste Gemini/OpenAI keys (stored in Keychain)
 - Android: **AI Settings** → paste keys (stored on-device)
+- Web: **Settings** → paste keys (stored in browser localStorage)
 
 ## License
 
