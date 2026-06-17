@@ -3,6 +3,7 @@ import { createAnthropicVisionService } from "./anthropicVision";
 import { createGeminiVisionService } from "./geminiVision";
 import { createGroqVisionService } from "./groqVision";
 import { createMistralVisionService } from "./mistralVision";
+import { createNvidiaVisionService } from "./nvidiaVision";
 import { createOpenAIVisionService } from "./openaiVision";
 import { createOpenRouterVisionService } from "./openrouterVision";
 import type { VisionAIService } from "./types";
@@ -24,5 +25,7 @@ export function createVisionService(settings: Settings): VisionAIService {
       return createMistralVisionService(apiKey);
     case "openrouter":
       return createOpenRouterVisionService(apiKey, settings.openrouterModel);
+    case "nvidia":
+      return createNvidiaVisionService(apiKey, settings.nvidiaModel);
   }
 }

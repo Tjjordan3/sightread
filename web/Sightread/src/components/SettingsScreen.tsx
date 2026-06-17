@@ -18,6 +18,7 @@ const KEY_FIELDS = {
   anthropic: "anthropicApiKey",
   mistral: "mistralApiKey",
   openrouter: "openrouterApiKey",
+  nvidia: "nvidiaApiKey",
 } as const;
 
 export function SettingsScreen({
@@ -102,6 +103,21 @@ export function SettingsScreen({
               onChange={(e) => onUpdate({ openrouterModel: e.target.value })}
               placeholder="google/gemini-2.0-flash-001"
             />
+          </label>
+        )}
+
+        {settings.provider === "nvidia" && (
+          <label className="field">
+            <span>NVIDIA NIM model</span>
+            <input
+              type="text"
+              value={settings.nvidiaModel}
+              onChange={(e) => onUpdate({ nvidiaModel: e.target.value })}
+              placeholder="meta/llama-3.2-11b-vision-instruct"
+            />
+            <span className="footnote">
+              Vision-capable model ID from build.nvidia.com (e.g. meta/llama-3.2-11b-vision-instruct).
+            </span>
           </label>
         )}
 

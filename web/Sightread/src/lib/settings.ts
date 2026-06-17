@@ -17,6 +17,7 @@ export interface Settings {
   provider: AIProvider;
   theme: ThemeSetting;
   openrouterModel: string;
+  nvidiaModel: string;
   promptMode: PromptMode;
   selectedPromptId: string;
   analysisIntervalSec: number;
@@ -32,6 +33,7 @@ export interface Settings {
   anthropicApiKey: string;
   mistralApiKey: string;
   openrouterApiKey: string;
+  nvidiaApiKey: string;
 }
 
 const STORAGE_KEY = "sightread_settings";
@@ -40,6 +42,7 @@ const DEFAULTS: Settings = {
   provider: "gemini",
   theme: "auto",
   openrouterModel: "google/gemini-2.0-flash-001",
+  nvidiaModel: "meta/llama-3.2-11b-vision-instruct",
   promptMode: "auto",
   selectedPromptId: "scene",
   analysisIntervalSec: 10,
@@ -55,6 +58,7 @@ const DEFAULTS: Settings = {
   anthropicApiKey: "",
   mistralApiKey: "",
   openrouterApiKey: "",
+  nvidiaApiKey: "",
 };
 
 const VALID_PROVIDERS = new Set<string>([
@@ -64,6 +68,7 @@ const VALID_PROVIDERS = new Set<string>([
   "anthropic",
   "mistral",
   "openrouter",
+  "nvidia",
 ]);
 
 const VALID_THEMES = new Set<string>(["light", "dark", "auto"]);

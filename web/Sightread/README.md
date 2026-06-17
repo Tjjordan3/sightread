@@ -21,6 +21,7 @@ Browser-based AI agent and vision companion for Sightread. Works as a Meta AI–
 - **Google Gemini**, **OpenAI**, **Groq**
 - **Anthropic Claude**, **Mistral** (Pixtral)
 - **OpenRouter** — one key, any vision-capable model ID
+- **NVIDIA NIM** — OpenAI-compatible API via build.nvidia.com
 
 ### PWA
 - Installable on Android/desktop Chrome (`beforeinstallprompt`)

@@ -6,7 +6,8 @@ export type AIProvider =
   | "groq"
   | "anthropic"
   | "mistral"
-  | "openrouter";
+  | "openrouter"
+  | "nvidia";
 
 export interface ProviderDefinition {
   id: AIProvider;
@@ -65,6 +66,14 @@ export const AI_PROVIDERS: ProviderDefinition[] = [
     keyPlaceholder: "sk-or-…",
     keyHint: "openrouter.ai — one key for many models",
     getKey: (s) => s.openrouterApiKey,
+  },
+  {
+    id: "nvidia",
+    label: "NVIDIA NIM",
+    keyLabel: "NVIDIA API key",
+    keyPlaceholder: "nvapi-…",
+    keyHint: "build.nvidia.com — free developer API",
+    getKey: (s) => s.nvidiaApiKey,
   },
 ];
 
