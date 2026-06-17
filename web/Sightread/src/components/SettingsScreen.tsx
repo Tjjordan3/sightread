@@ -39,6 +39,27 @@ export function SettingsScreen({
       </header>
 
       <div className="settings-screen__content">
+        <h3 className="settings-section-title">Appearance</h3>
+        <label className="field">
+          <span>Theme</span>
+          <select
+            value={draft.theme}
+            onChange={(e) =>
+              setDraft({
+                ...draft,
+                theme: e.target.value as Settings["theme"],
+              })
+            }
+          >
+            <option value="auto">Auto (match system)</option>
+            <option value="light">Light</option>
+            <option value="dark">Dark</option>
+          </select>
+        </label>
+        <p className="footnote">
+          Auto follows your device&apos;s light or dark mode setting.
+        </p>
+
         <h3 className="settings-section-title">Vision</h3>
         <label className="switch-row">
           <span>Enable AI analysis</span>

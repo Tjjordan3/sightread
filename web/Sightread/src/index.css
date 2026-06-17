@@ -1,6 +1,38 @@
 :root {
-  color: #111;
-  background: #fff;
+  --bg: #ffffff;
+  --bg-elevated: #f2f2f2;
+  --bg-accent: #e8f0fe;
+  --bg-accent-strong: #c5d9f5;
+  --bg-muted: #f5f5f5;
+  --bg-warning: #fff8e6;
+  --bg-success: #e8f5e9;
+  --bg-processing: #fff8e1;
+  --text: #111111;
+  --text-muted: #666666;
+  --text-inverse: #ffffff;
+  --text-primary: #0064e0;
+  --text-danger: #ff3b30;
+  --text-warning: #7a5b00;
+  --text-success: #1b5e20;
+  --text-processing: #8d6e00;
+  --border: #e5e5e5;
+  --border-subtle: #eeeeee;
+  --border-input: #cccccc;
+  --border-strong: #dddddd;
+  --surface-overlay: rgba(0, 0, 0, 0.45);
+  --surface-glass: rgba(255, 255, 255, 0.92);
+  --surface-glass-btn: rgba(255, 255, 255, 0.9);
+  --surface-stream-scrim: rgba(0, 0, 0, 0.45);
+  --shadow-drawer: 2px 0 16px rgba(0, 0, 0, 0.12);
+  --error-banner-bg: #ffd8db;
+  --error-banner-text: #aa071e;
+  --primary: #0064e0;
+  --danger: #ff3b30;
+  --bubble-user: #e8f0fe;
+  --bubble-assistant: #f2f2f2;
+  --conversation-active-bg: #f5f9ff;
+  color: var(--text);
+  background: var(--bg);
   font-family:
     system-ui,
     -apple-system,
@@ -13,6 +45,43 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  color-scheme: light;
+}
+
+:root[data-theme="dark"] {
+  --bg: #0f0f10;
+  --bg-elevated: #1c1c1f;
+  --bg-accent: #1a2744;
+  --bg-accent-strong: #243656;
+  --bg-muted: #18181b;
+  --bg-warning: #2a2410;
+  --bg-success: #14261a;
+  --bg-processing: #2a2410;
+  --text: #f2f2f4;
+  --text-muted: #a0a0a8;
+  --text-inverse: #ffffff;
+  --text-primary: #6ba3ff;
+  --text-danger: #ff6b63;
+  --text-warning: #e6c76a;
+  --text-success: #81c784;
+  --text-processing: #d4b44a;
+  --border: #2a2a2e;
+  --border-subtle: #232327;
+  --border-input: #3a3a40;
+  --border-strong: #34343a;
+  --surface-overlay: rgba(0, 0, 0, 0.62);
+  --surface-glass: rgba(24, 24, 27, 0.94);
+  --surface-glass-btn: rgba(36, 36, 40, 0.92);
+  --surface-stream-scrim: rgba(0, 0, 0, 0.55);
+  --shadow-drawer: 2px 0 16px rgba(0, 0, 0, 0.45);
+  --error-banner-bg: #3d1820;
+  --error-banner-text: #ff8a98;
+  --primary: #4d8fff;
+  --danger: #ff6b63;
+  --bubble-user: #1a2744;
+  --bubble-assistant: #1c1c1f;
+  --conversation-active-bg: #141c2e;
+  color-scheme: dark;
 }
 
 *,
@@ -25,6 +94,8 @@ body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
+  background: var(--bg);
+  color: var(--text);
 }
 
 #root {
@@ -35,6 +106,7 @@ button,
 input,
 select {
   font: inherit;
+  color: inherit;
 }
 
 .screen {
@@ -42,15 +114,16 @@ select {
   padding: 24px;
   display: flex;
   flex-direction: column;
+  background: var(--bg);
 }
 
 .subtitle {
-  color: #666;
+  color: var(--text-muted);
   margin: 0;
 }
 
 .footnote {
-  color: #666;
+  color: var(--text-muted);
   font-size: 0.875rem;
   margin: 0;
 }
@@ -68,18 +141,19 @@ select {
 }
 
 .btn--primary {
-  background: #0064e0;
-  color: #fff;
+  background: var(--primary);
+  color: var(--text-inverse);
 }
 
 .btn--secondary {
-  background: rgba(255, 255, 255, 0.9);
-  color: #111;
+  background: var(--surface-glass-btn);
+  color: var(--text);
+  border: 1px solid var(--border);
 }
 
 .btn--danger {
-  background: #ff3b30;
-  color: #fff;
+  background: var(--danger);
+  color: var(--text-inverse);
 }
 
 .btn--ghost {
@@ -93,9 +167,11 @@ select {
   height: 40px;
   border: none;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.9);
+  background: var(--surface-glass-btn);
+  color: var(--text);
   cursor: pointer;
   font-size: 1.1rem;
+  border: 1px solid var(--border);
 }
 
 .home-screen {
@@ -146,7 +222,7 @@ select {
 
 .tip-list p {
   margin: 4px 0 0;
-  color: #666;
+  color: var(--text-muted);
   font-size: 0.95rem;
 }
 
@@ -194,11 +270,14 @@ select {
 
 .field input[type="password"],
 .field input[type="text"],
+.field input[type="url"],
 .field select {
   width: 100%;
   padding: 10px 12px;
-  border: 1px solid #ccc;
+  border: 1px solid var(--border-input);
   border-radius: 8px;
+  background: var(--bg);
+  color: var(--text);
 }
 
 .stream-screen {
@@ -221,8 +300,8 @@ select {
   inset: 0;
   display: grid;
   place-items: center;
-  background: rgba(0, 0, 0, 0.45);
-  color: #fff;
+  background: var(--surface-stream-scrim);
+  color: var(--text-inverse);
 }
 
 .stream-screen__banner {
@@ -235,8 +314,8 @@ select {
 }
 
 .stream-screen__banner--error {
-  background: #ffd8db;
-  color: #aa071e;
+  background: var(--error-banner-bg);
+  color: var(--error-banner-text);
 }
 
 .stream-screen__chrome {
@@ -260,12 +339,12 @@ select {
   justify-content: space-between;
   align-items: center;
   padding: 12px 16px;
-  color: #fff;
+  color: var(--text-inverse);
 }
 
 .stream-screen__label {
   font-size: 0.8rem;
-  background: rgba(0, 0, 0, 0.45);
+  background: var(--surface-stream-scrim);
   padding: 6px 10px;
   border-radius: 999px;
 }
@@ -290,7 +369,9 @@ select {
   margin: 0 12px;
   padding: 12px;
   border-radius: 12px;
-  background: rgba(255, 255, 255, 0.92);
+  background: var(--surface-glass);
+  color: var(--text);
+  border: 1px solid var(--border);
 }
 
 .ai-panel__header {
@@ -301,11 +382,11 @@ select {
 }
 
 .ai-panel__status {
-  color: #0064e0;
+  color: var(--text-primary);
 }
 
 .ai-panel__error {
-  color: #ff3b30;
+  color: var(--text-danger);
   margin: 0;
   font-size: 0.9rem;
 }
@@ -322,13 +403,13 @@ select {
 .ai-panel__meta {
   margin: 8px 0 0;
   font-size: 0.75rem;
-  color: #666;
+  color: var(--text-muted);
 }
 
 .chat-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.45);
+  background: var(--surface-overlay);
   display: flex;
   align-items: flex-end;
   z-index: 10;
@@ -337,11 +418,12 @@ select {
 .chat-panel {
   width: 100%;
   max-height: 80vh;
-  background: #fff;
+  background: var(--bg);
   border-radius: 16px 16px 0 0;
   display: flex;
   flex-direction: column;
   padding: 16px;
+  color: var(--text);
 }
 
 .chat-panel__header {
@@ -364,25 +446,26 @@ select {
 }
 
 .chat-panel__error {
-  color: #ff3b30;
+  color: var(--text-danger);
   margin: 0 0 8px;
 }
 
 .chat-panel__thinking {
   text-align: center;
-  color: #666;
+  color: var(--text-muted);
 }
 
 .chat-bubble {
   max-width: 85%;
   padding: 10px 12px;
   border-radius: 12px;
-  background: #f2f2f2;
+  background: var(--bubble-assistant);
+  color: var(--text);
 }
 
 .chat-bubble--user {
   justify-self: end;
-  background: #e8f0fe;
+  background: var(--bubble-user);
 }
 
 .chat-bubble p {
@@ -393,7 +476,7 @@ select {
   display: block;
   margin-top: 4px;
   font-size: 0.75rem;
-  color: #666;
+  color: var(--text-muted);
 }
 
 .chat-panel__attach {
@@ -412,8 +495,10 @@ select {
 .chat-panel__composer input {
   flex: 1;
   padding: 10px 12px;
-  border: 1px solid #ccc;
+  border: 1px solid var(--border-input);
   border-radius: 999px;
+  background: var(--bg);
+  color: var(--text);
 }
 
 @media (min-width: 720px) {
@@ -434,7 +519,8 @@ select {
   min-height: 100dvh;
   display: flex;
   flex-direction: column;
-  background: #fff;
+  background: var(--bg);
+  color: var(--text);
 }
 
 .app-shell__content {
@@ -446,8 +532,8 @@ select {
 .app-shell__nav {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  border-top: 1px solid #e5e5e5;
-  background: #fff;
+  border-top: 1px solid var(--border);
+  background: var(--bg);
   padding: 6px 8px calc(6px + env(safe-area-inset-bottom));
 }
 
@@ -459,7 +545,7 @@ select {
   padding: 8px 4px;
   border: none;
   background: transparent;
-  color: #666;
+  color: var(--text-muted);
   font-size: 0.75rem;
   cursor: pointer;
   border-radius: 12px;
@@ -470,8 +556,8 @@ select {
 }
 
 .app-shell__tab--active {
-  color: #0064e0;
-  background: #e8f0fe;
+  color: var(--text-primary);
+  background: var(--bg-accent);
 }
 
 .agent-chat-screen {
@@ -487,6 +573,7 @@ select {
   min-height: calc(100vh - 64px);
   min-height: calc(100dvh - 64px);
   padding: 16px;
+  background: var(--bg);
 }
 
 .agent-chat--embedded {
@@ -509,7 +596,7 @@ select {
 
 .agent-chat__subtitle {
   margin: 4px 0 0;
-  color: #666;
+  color: var(--text-muted);
   font-size: 0.85rem;
 }
 
@@ -523,7 +610,7 @@ select {
 }
 
 .chat-message-list__hint {
-  color: #666;
+  color: var(--text-muted);
   font-size: 0.9rem;
   text-align: center;
   margin: 24px 12px;
@@ -541,7 +628,7 @@ select {
 .chat-composer {
   display: grid;
   gap: 10px;
-  border-top: 1px solid #eee;
+  border-top: 1px solid var(--border-subtle);
   padding-top: 12px;
 }
 
@@ -555,7 +642,7 @@ select {
   height: 96px;
   object-fit: cover;
   border-radius: 12px;
-  border: 1px solid #ddd;
+  border: 1px solid var(--border-strong);
 }
 
 .chat-composer__remove {
@@ -566,8 +653,8 @@ select {
   height: 24px;
   border: none;
   border-radius: 999px;
-  background: #111;
-  color: #fff;
+  background: var(--text);
+  color: var(--bg);
   cursor: pointer;
 }
 
@@ -585,13 +672,14 @@ select {
   gap: 8px;
   padding: 10px 12px;
   border-radius: 12px;
-  background: #e8f0fe;
+  background: var(--bg-accent);
   font-size: 0.85rem;
 }
 
 .icon-button--active {
-  background: #0064e0;
-  color: #fff;
+  background: var(--primary);
+  color: var(--text-inverse);
+  border-color: var(--primary);
 }
 
 .btn--compact {
@@ -621,15 +709,15 @@ select {
 .storage-banner {
   margin: 0;
   padding: 10px 16px;
-  background: #fff8e6;
-  color: #7a5b00;
+  background: var(--bg-warning);
+  color: var(--text-warning);
   font-size: 0.85rem;
 }
 
 .agent-chat-screen--loading {
   display: grid;
   place-items: center;
-  color: #666;
+  color: var(--text-muted);
 }
 
 .agent-chat__header-actions {
@@ -640,18 +728,19 @@ select {
 .conversation-drawer {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.4);
+  background: var(--surface-overlay);
   z-index: 20;
   display: flex;
 }
 
 .conversation-drawer__panel {
   width: min(360px, 92vw);
-  background: #fff;
+  background: var(--bg);
   height: 100%;
   padding: 16px;
   overflow-y: auto;
-  box-shadow: 2px 0 16px rgba(0, 0, 0, 0.12);
+  box-shadow: var(--shadow-drawer);
+  color: var(--text);
 }
 
 .conversation-drawer__header {
@@ -679,14 +768,15 @@ select {
 }
 
 .conversation-list__item {
-  border: 1px solid #e5e5e5;
+  border: 1px solid var(--border);
   border-radius: 12px;
   overflow: hidden;
+  background: var(--bg);
 }
 
 .conversation-list__item--active {
-  border-color: #0064e0;
-  background: #f5f9ff;
+  border-color: var(--primary);
+  background: var(--conversation-active-bg);
 }
 
 .conversation-list__select {
@@ -698,10 +788,11 @@ select {
   cursor: pointer;
   display: grid;
   gap: 4px;
+  color: var(--text);
 }
 
 .conversation-list__select span {
-  color: #666;
+  color: var(--text-muted);
   font-size: 0.75rem;
 }
 
@@ -718,18 +809,18 @@ select {
   border-radius: 999px;
   font-size: 0.85rem;
   text-align: center;
-  background: #e8f0fe;
-  color: #0064e0;
+  background: var(--bg-accent);
+  color: var(--text-primary);
 }
 
 .voice-status--speaking {
-  background: #e8f5e9;
-  color: #1b5e20;
+  background: var(--bg-success);
+  color: var(--text-success);
 }
 
 .voice-status--processing {
-  background: #fff8e1;
-  color: #8d6e00;
+  background: var(--bg-processing);
+  color: var(--text-processing);
 }
 
 .chat-composer__wake-hint {
@@ -742,14 +833,15 @@ select {
   align-items: center;
   gap: 8px;
   padding: 10px 14px;
-  background: #e8f0fe;
-  border-bottom: 1px solid #c5d9f5;
+  background: var(--bg-accent);
+  border-bottom: 1px solid var(--bg-accent-strong);
   font-size: 0.85rem;
+  color: var(--text);
 }
 
 .install-banner--ios {
-  background: #f5f5f5;
-  border-bottom-color: #ddd;
+  background: var(--bg-muted);
+  border-bottom-color: var(--border);
 }
 
 .chat-composer {

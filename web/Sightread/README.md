@@ -31,6 +31,7 @@ Browser-based AI agent and vision companion for Sightread. Works as a Meta AI–
 ### Shared
 - Same prompt presets as iOS/Android
 - API keys in `localStorage` (on-device only); calls go directly to your chosen provider
+- **Light / dark / auto theme** — matches system appearance when set to Auto
 
 ## Quick start
 

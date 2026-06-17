@@ -9,11 +9,13 @@ import {
   getProviderDefinition,
   hasApiKeyForProvider,
 } from "./providers";
+import type { ThemeSetting } from "./theme";
 
 export type { AIProvider };
 
 export interface Settings {
   provider: AIProvider;
+  theme: ThemeSetting;
   openrouterModel: string;
   promptMode: PromptMode;
   selectedPromptId: string;
@@ -36,6 +38,7 @@ const STORAGE_KEY = "sightread_settings";
 
 const DEFAULTS: Settings = {
   provider: "gemini",
+  theme: "auto",
   openrouterModel: "google/gemini-2.0-flash-001",
   promptMode: "auto",
   selectedPromptId: "scene",
@@ -63,6 +66,8 @@ const VALID_PROVIDERS = new Set<string>([
   "openrouter",
 ]);
 
+const VALID_THEMES = new Set<string>(["light", "dark", "auto"]);
+
 export function loadSettings(): Settings {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -71,10 +76,14 @@ export function loadSettings(): Settings {
     const provider = VALID_PROVIDERS.has(parsed.provider ?? "")
       ? (parsed.provider as AIProvider)
       : DEFAULTS.provider;
+    const theme = VALID_THEMES.has(parsed.theme ?? "")
+      ? (parsed.theme as ThemeSetting)
+      : DEFAULTS.theme;
     return {
       ...DEFAULTS,
       ...parsed,
       provider,
+      theme,
       promptMode: parsed.promptMode === "manual" ? "manual" : "auto",
       analysisIntervalSec: Math.min(
         10,

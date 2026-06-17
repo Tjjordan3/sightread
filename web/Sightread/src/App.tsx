@@ -5,10 +5,12 @@ import { InstallPrompt } from "./components/InstallPrompt";
 import { SettingsScreen } from "./components/SettingsScreen";
 import { StreamScreen } from "./components/StreamScreen";
 import { useKeyboardViewportOffset } from "./hooks/useKeyboardViewport";
+import { useTheme } from "./hooks/useTheme";
 import { useSettings } from "./hooks/useSettings";
 
 function App() {
   const { settings, setSettings } = useSettings();
+  useTheme(settings.theme);
   const [tab, setTab] = useState<AppTab>("chat");
   const [chatEpoch, setChatEpoch] = useState(0);
   useKeyboardViewportOffset();
