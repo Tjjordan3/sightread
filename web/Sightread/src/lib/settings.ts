@@ -5,18 +5,16 @@ import {
   type ResolvedVisionPrompt,
 } from "./promptPresets";
 import {
-  getAIAccessHint,
-  hasAIAccess,
-  hasLocalApiKey,
-  isBackendConfigured,
-  usesBackendRoute,
-} from "./ai/access";
+  type AIProvider,
+  getProviderDefinition,
+  hasApiKeyForProvider,
+} from "./providers";
 
-export type AIProvider = "gemini" | "openai" | "groq";
-export type ApiAccessMode = "local" | "backend" | "auto";
+export type { AIProvider };
 
 export interface Settings {
   provider: AIProvider;
+  openrouterModel: string;
   promptMode: PromptMode;
   selectedPromptId: string;
   analysisIntervalSec: number;
@@ -26,23 +24,19 @@ export interface Settings {
   alwaysListening: boolean;
   wakeWordEnabled: boolean;
   silenceTimeoutMs: number;
-  apiAccessMode: ApiAccessMode;
-  /** @deprecated use apiAccessMode */
-  useBackend?: boolean;
-  backendUrl: string;
-  backendToken: string;
   geminiApiKey: string;
   openAIApiKey: string;
   groqApiKey: string;
+  anthropicApiKey: string;
+  mistralApiKey: string;
+  openrouterApiKey: string;
 }
 
 const STORAGE_KEY = "sightread_settings";
 
-const CONCEPT_BACKEND_DEFAULT =
-  import.meta.env.VITE_CONCEPT_BACKEND_DEFAULT === "true";
-
 const DEFAULTS: Settings = {
   provider: "gemini",
+  openrouterModel: "google/gemini-2.0-flash-001",
   promptMode: "auto",
   selectedPromptId: "scene",
   analysisIntervalSec: 3,
@@ -52,35 +46,35 @@ const DEFAULTS: Settings = {
   alwaysListening: false,
   wakeWordEnabled: false,
   silenceTimeoutMs: 1200,
-  apiAccessMode: CONCEPT_BACKEND_DEFAULT ? "auto" : "local",
-  backendUrl: import.meta.env.VITE_CONCEPT_BACKEND_URL ?? "http://localhost:8787",
-  backendToken: import.meta.env.VITE_CONCEPT_BACKEND_TOKEN ?? "",
   geminiApiKey: "",
   openAIApiKey: "",
   groqApiKey: "",
+  anthropicApiKey: "",
+  mistralApiKey: "",
+  openrouterApiKey: "",
 };
 
-function parseApiAccessMode(parsed: Partial<Settings>): ApiAccessMode {
-  if (
-    parsed.apiAccessMode === "local" ||
-    parsed.apiAccessMode === "backend" ||
-    parsed.apiAccessMode === "auto"
-  ) {
-    return parsed.apiAccessMode;
-  }
-  if (parsed.useBackend) return "backend";
-  return DEFAULTS.apiAccessMode;
-}
+const VALID_PROVIDERS = new Set<string>([
+  "gemini",
+  "openai",
+  "groq",
+  "anthropic",
+  "mistral",
+  "openrouter",
+]);
 
 export function loadSettings(): Settings {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return { ...DEFAULTS };
     const parsed = JSON.parse(raw) as Partial<Settings>;
+    const provider = VALID_PROVIDERS.has(parsed.provider ?? "")
+      ? (parsed.provider as AIProvider)
+      : DEFAULTS.provider;
     return {
       ...DEFAULTS,
       ...parsed,
-      apiAccessMode: parseApiAccessMode(parsed),
+      provider,
       promptMode: parsed.promptMode === "manual" ? "manual" : "auto",
       analysisIntervalSec: Math.min(
         10,
@@ -100,26 +94,7 @@ export function saveSettings(settings: Settings): void {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
 }
 
-export {
-  getAIAccessHint,
-  hasAIAccess,
-  hasLocalApiKey,
-  isBackendConfigured,
-  usesBackendRoute,
-};
-
-/** @deprecated use hasAIAccess */
-export function isBackendMode(settings: Settings): boolean {
-  return settings.apiAccessMode === "backend" && isBackendConfigured(settings);
-}
-
-/** @deprecated use hasAIAccess */
-export function hasApiKeyForProvider(
-  settings: Settings,
-  provider: AIProvider = settings.provider,
-): boolean {
-  return hasAIAccess(settings, provider);
-}
+export { hasApiKeyForProvider };
 
 export function getSelectedPrompt(settings: Settings) {
   return getPromptPreset(settings.selectedPromptId);
@@ -137,12 +112,5 @@ export function getVisionPrompt(
 }
 
 export function getApiKey(settings: Settings): string {
-  switch (settings.provider) {
-    case "gemini":
-      return settings.geminiApiKey;
-    case "openai":
-      return settings.openAIApiKey;
-    case "groq":
-      return settings.groqApiKey;
-  }
+  return getProviderDefinition(settings.provider).getKey(settings);
 }

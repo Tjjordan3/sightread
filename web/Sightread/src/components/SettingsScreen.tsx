@@ -1,9 +1,8 @@
 import { useState } from "react";
-import { fetchBackendMeta, fetchBackendProviders } from "../lib/backend/client";
 import { clearChatHistory } from "../lib/clearChatHistory";
 import { PROMPT_PRESETS } from "../lib/promptPresets";
-import type { ApiAccessMode, Settings } from "../lib/settings";
-import { isBackendConfigured } from "../lib/settings";
+import { AI_PROVIDERS } from "../lib/providers";
+import type { Settings } from "../lib/settings";
 import { WAKE_PHRASE } from "../lib/voice/wakeWord";
 
 interface SettingsScreenProps {
@@ -13,6 +12,15 @@ interface SettingsScreenProps {
   onHistoryCleared?: () => void;
 }
 
+const KEY_FIELDS = {
+  gemini: "geminiApiKey",
+  openai: "openAIApiKey",
+  groq: "groqApiKey",
+  anthropic: "anthropicApiKey",
+  mistral: "mistralApiKey",
+  openrouter: "openrouterApiKey",
+} as const;
+
 export function SettingsScreen({
   settings: initial,
   onSave,
@@ -20,27 +28,6 @@ export function SettingsScreen({
   onHistoryCleared,
 }: SettingsScreenProps) {
   const [draft, setDraft] = useState<Settings>(initial);
-  const [backendStatus, setBackendStatus] = useState("");
-
-  const testBackend = async () => {
-    if (!isBackendConfigured(draft)) {
-      setBackendStatus("Set backend URL and device token first.");
-      return;
-    }
-    setBackendStatus("Checking…");
-    try {
-      const meta = await fetchBackendMeta(draft);
-      const providers = await fetchBackendProviders(draft);
-      const available = providers.available.join(", ") || "none";
-      setBackendStatus(
-        `Connected to ${meta.service} v${meta.version}. Available providers: ${available}.`,
-      );
-    } catch (err) {
-      setBackendStatus(
-        err instanceof Error ? err.message : "Could not reach backend.",
-      );
-    }
-  };
 
   return (
     <div className="screen settings-screen">
@@ -86,11 +73,27 @@ export function SettingsScreen({
               })
             }
           >
-            <option value="gemini">Gemini</option>
-            <option value="openai">OpenAI</option>
-            <option value="groq">Groq</option>
+            {AI_PROVIDERS.map((provider) => (
+              <option key={provider.id} value={provider.id}>
+                {provider.label}
+              </option>
+            ))}
           </select>
         </label>
+
+        {draft.provider === "openrouter" && (
+          <label className="field">
+            <span>OpenRouter model</span>
+            <input
+              type="text"
+              value={draft.openrouterModel}
+              onChange={(e) =>
+                setDraft({ ...draft, openrouterModel: e.target.value })
+              }
+              placeholder="google/gemini-2.0-flash-001"
+            />
+          </label>
+        )}
 
         <label className="switch-row">
           <span>Smart prompts (recommended)</span>
@@ -197,115 +200,30 @@ export function SettingsScreen({
           />
         </label>
 
-        <h3 className="settings-section-title">API access</h3>
-        <label className="field">
-          <span>Routing mode</span>
-          <select
-            value={draft.apiAccessMode}
-            onChange={(e) =>
-              setDraft({
-                ...draft,
-                apiAccessMode: e.target.value as ApiAccessMode,
-              })
-            }
-          >
-            <option value="local">Local only — browser API keys</option>
-            <option value="backend">Backend only — concept server</option>
-            <option value="auto">Auto — backend first, fallback to local keys</option>
-          </select>
-        </label>
+        <h3 className="settings-section-title">API keys</h3>
         <p className="footnote">
-          {draft.apiAccessMode === "local" &&
-            "Calls go directly from this browser to Gemini, OpenAI, or Groq."}
-          {draft.apiAccessMode === "backend" &&
-            "All AI calls route through the concept backend. Server keys are used when set; otherwise your local keys are forwarded securely in the request."}
-          {draft.apiAccessMode === "auto" &&
-            "Tries the concept backend first. If it fails, falls back to local API keys in this browser."}
+          Keys are stored in this browser only (localStorage). Calls go directly
+          from your device to the selected provider.
         </p>
 
-        {draft.apiAccessMode !== "local" && (
-          <>
-            <label className="field">
-              <span>Backend URL</span>
-              <input
-                type="url"
-                value={draft.backendUrl}
-                onChange={(e) =>
-                  setDraft({ ...draft, backendUrl: e.target.value })
-                }
-                placeholder="/api/concept or http://localhost:8787"
-              />
-            </label>
-            <label className="field">
-              <span>Device token</span>
+        {AI_PROVIDERS.map((provider) => {
+          const field = KEY_FIELDS[provider.id];
+          return (
+            <label key={provider.id} className="field">
+              <span>{provider.keyLabel}</span>
               <input
                 type="password"
                 autoComplete="off"
-                value={draft.backendToken}
+                value={draft[field]}
                 onChange={(e) =>
-                  setDraft({ ...draft, backendToken: e.target.value })
+                  setDraft({ ...draft, [field]: e.target.value })
                 }
-                placeholder="Matches SIGHTREAD_CONCEPT_TOKEN"
+                placeholder={provider.keyPlaceholder}
               />
+              <span className="footnote">{provider.keyHint}</span>
             </label>
-            <button
-              type="button"
-              className="btn btn--secondary"
-              onClick={() => void testBackend()}
-            >
-              Test backend connection
-            </button>
-            {backendStatus && (
-              <p className="footnote">{backendStatus}</p>
-            )}
-          </>
-        )}
-
-        <h3 className="settings-section-title">API keys</h3>
-        <label className="field">
-          <span>Gemini API key</span>
-          <input
-            type="password"
-            autoComplete="off"
-            value={draft.geminiApiKey}
-            onChange={(e) =>
-              setDraft({ ...draft, geminiApiKey: e.target.value })
-            }
-            placeholder="From Google AI Studio"
-          />
-        </label>
-
-        <label className="field">
-          <span>OpenAI API key</span>
-          <input
-            type="password"
-            autoComplete="off"
-            value={draft.openAIApiKey}
-            onChange={(e) =>
-              setDraft({ ...draft, openAIApiKey: e.target.value })
-            }
-            placeholder="sk-…"
-          />
-        </label>
-
-        <label className="field">
-          <span>Groq API key</span>
-          <input
-            type="password"
-            autoComplete="off"
-            value={draft.groqApiKey}
-            onChange={(e) =>
-              setDraft({ ...draft, groqApiKey: e.target.value })
-            }
-            placeholder="gsk_…"
-          />
-        </label>
-
-        <p className="footnote">
-          {draft.apiAccessMode === "local"
-            ? "Keys stay in this browser (localStorage) and are sent directly to providers."
-            : "Local keys are optional when using the backend. If the server lacks a provider key, yours are forwarded only for that request (BYOK-through-proxy)."}
-        </p>
+          );
+        })}
 
         <h3 className="settings-section-title">Data</h3>
         <button

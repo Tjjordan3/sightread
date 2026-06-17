@@ -13,9 +13,14 @@ Browser-based AI agent and vision companion for Sightread. Works as a Meta AI–
 - **Spoken replies** (Settings)
 
 ### Vision (Sightread live mode)
-- Webcam streaming with throttled vision analysis (Gemini / OpenAI / Groq)
+- Webcam streaming with throttled vision analysis
 - Live AI response panel, **Analyze now**, and photo upload
 - Quick chat overlay with live camera frame attach
+
+### AI providers (local, browser-direct)
+- **Google Gemini**, **OpenAI**, **Groq**
+- **Anthropic Claude**, **Mistral** (Pixtral)
+- **OpenRouter** — one key, any vision-capable model ID
 
 ### PWA
 - Installable on Android/desktop Chrome (`beforeinstallprompt`)
@@ -25,8 +30,7 @@ Browser-based AI agent and vision companion for Sightread. Works as a Meta AI–
 
 ### Shared
 - Same prompt presets as iOS/Android
-- API keys in `localStorage` (on-device only)
-- **Optional API access modes** — local, backend proxy, or auto (backend first with local fallback). See [docs/BACKEND_CONCEPT.md](../../docs/BACKEND_CONCEPT.md).
+- API keys in `localStorage` (on-device only); calls go directly to your chosen provider
 
 ## Quick start
 
@@ -36,7 +40,7 @@ npm install
 npm run dev
 ```
 
-1. **Settings** → add API keys
+1. **Settings** → pick a provider and add its API key
 2. **Agent** tab → chat, history, photos, or voice
 3. **Vision** tab → live webcam analysis
 

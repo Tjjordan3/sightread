@@ -7,7 +7,7 @@ ios/**/xcuserdata/
 .env
 *.pem
 
-# Local concept backend (not shipped)
+# Local-only experiments (not part of the product)
 concept-backend/
 
 # OS

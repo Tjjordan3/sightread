@@ -1,11 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createChatService, type ChatMessage } from "../lib/chat";
 import { blobToBase64, captureFrameAsJpeg, fileToJpegBlob } from "../lib/imageEncoding";
-import {
-  getAIAccessHint,
-  hasAIAccess,
-  type Settings,
-} from "../lib/settings";
+import { hasApiKeyForProvider, type Settings } from "../lib/settings";
 import { speakAsync, stopSpeaking } from "../lib/speech";
 
 export interface PendingAttachment {
@@ -84,8 +80,8 @@ export function useAgentChat({
       const hasAttachment = pendingAttachment != null || attachLiveFrame;
       if ((!text && !hasAttachment) || isSending) return;
 
-      if (!hasAIAccess(settings)) {
-        setError(getAIAccessHint(settings));
+      if (!hasApiKeyForProvider(settings)) {
+        setError("Add API key in Settings.");
         return;
       }
 

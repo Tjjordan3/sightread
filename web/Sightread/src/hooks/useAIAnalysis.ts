@@ -1,6 +1,6 @@
 import { useCallback, useRef, useState } from "react";
 import { blobToBase64, captureFrameAsJpeg } from "../lib/imageEncoding";
-import { getAIAccessHint, getVisionPrompt, hasAIAccess, type Settings } from "../lib/settings";
+import { getVisionPrompt, hasApiKeyForProvider, type Settings } from "../lib/settings";
 import { speak, stopSpeaking } from "../lib/speech";
 import { createVisionService } from "../lib/vision";
 
@@ -99,13 +99,13 @@ export function useAIAnalysis(settings: Settings) {
       if (!video || video.readyState < 2) return;
       if (!settings.isAIEnabled) return;
 
-      if (!hasAIAccess(settings)) {
+      if (!hasApiKeyForProvider(settings)) {
         if (!didShowMissingKeyError.current) {
           didShowMissingKeyError.current = true;
           setState((prev) => ({
             ...prev,
             analysisState: "error",
-            errorMessage: getAIAccessHint(settings),
+            errorMessage: "Add API key in Settings.",
           }));
         }
         return;
