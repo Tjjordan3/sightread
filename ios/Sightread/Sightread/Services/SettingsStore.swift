@@ -18,6 +18,7 @@ final class SettingsStore {
   static let shared = SettingsStore()
   private enum Keys {
     static let provider = "sightread.ai.provider"
+    static let promptMode = "sightread.ai.promptMode"
     static let promptId = "sightread.ai.promptId"
     static let interval = "sightread.ai.interval"
     static let aiEnabled = "sightread.ai.enabled"
@@ -27,6 +28,7 @@ final class SettingsStore {
     static let groqKey = "sightread.key.groq"
   }
   var provider: AIProvider { didSet { UserDefaults.standard.set(provider.rawValue, forKey: Keys.provider) } }
+  var promptMode: PromptMode { didSet { UserDefaults.standard.set(promptMode.rawValue, forKey: Keys.promptMode) } }
   var selectedPromptId: String { didSet { UserDefaults.standard.set(selectedPromptId, forKey: Keys.promptId) } }
   var analysisInterval: TimeInterval { didSet { UserDefaults.standard.set(analysisInterval, forKey: Keys.interval) } }
   var isAIEnabled: Bool { didSet { UserDefaults.standard.set(isAIEnabled, forKey: Keys.aiEnabled) } }
@@ -35,6 +37,9 @@ final class SettingsStore {
   var openAIAPIKey: String { get { KeychainStore.load(account: Keys.openaiKey) ?? "" } set { newValue.isEmpty ? KeychainStore.delete(account: Keys.openaiKey) : KeychainStore.save(newValue, account: Keys.openaiKey) } }
   var groqAPIKey: String { get { KeychainStore.load(account: Keys.groqKey) ?? "" } set { newValue.isEmpty ? KeychainStore.delete(account: Keys.groqKey) : KeychainStore.save(newValue, account: Keys.groqKey) } }
   var selectedPrompt: PromptPreset { PromptPresets.preset(id: selectedPromptId) }
+  var visionPrompt: ResolvedVisionPrompt {
+    PromptPresets.resolve(mode: promptMode, selectedPromptId: selectedPromptId)
+  }
   var hasAPIKeyForCurrentProvider: Bool {
     switch provider {
     case .gemini: return !geminiAPIKey.isEmpty
@@ -45,6 +50,7 @@ final class SettingsStore {
   private init() {
     let d = UserDefaults.standard
     provider = AIProvider(rawValue: d.string(forKey: Keys.provider) ?? "") ?? .gemini
+    promptMode = PromptMode(rawValue: d.string(forKey: Keys.promptMode) ?? "") ?? .auto
     selectedPromptId = d.string(forKey: Keys.promptId) ?? PromptPresets.all[0].id
     let iv = d.double(forKey: Keys.interval); analysisInterval = iv > 0 ? iv : 3
     isAIEnabled = d.object(forKey: Keys.aiEnabled) == nil ? true : d.bool(forKey: Keys.aiEnabled)

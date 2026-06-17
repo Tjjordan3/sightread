@@ -27,6 +27,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.meta.wearable.dat.externalsampleapps.sightread.ai.AIProvider
+import com.meta.wearable.dat.externalsampleapps.sightread.ai.PromptMode
 import com.meta.wearable.dat.externalsampleapps.sightread.ai.PromptPresets
 import com.meta.wearable.dat.externalsampleapps.sightread.ai.SettingsRepository
 
@@ -47,7 +48,20 @@ fun SettingsScreen(settings: SettingsRepository, onDone: () -> Unit, modifier: M
       RowWithSwitch("Read responses aloud", settings.isTTSEnabled) { settings.isTTSEnabled = it }
 
       ProviderDropdown(settings)
-      PromptDropdown(settings)
+      RowWithSwitch(
+          label = "Smart prompts (recommended)",
+          checked = settings.promptMode == PromptMode.AUTO,
+      ) {
+        settings.promptMode = if (it) PromptMode.AUTO else PromptMode.MANUAL
+      }
+      if (settings.promptMode == PromptMode.AUTO) {
+        Text(
+            "Sightread picks the best vision prompt automatically — no preset to choose.",
+            modifier = Modifier.padding(bottom = 8.dp),
+        )
+      } else {
+        PromptDropdown(settings)
+      }
 
       Text("Analyze every ${interval}s")
       Slider(

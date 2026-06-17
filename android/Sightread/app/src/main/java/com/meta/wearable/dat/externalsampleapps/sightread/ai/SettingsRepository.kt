@@ -22,6 +22,11 @@ class SettingsRepository(context: Context) {
     get() = prefs.getString(KEY_PROMPT, PromptPresets.all.first().id)!!
     set(value) = prefs.edit { putString(KEY_PROMPT, value) }
 
+  var promptMode: PromptMode
+    get() =
+        if (prefs.getBoolean(KEY_PROMPT_MODE_MANUAL, false)) PromptMode.MANUAL else PromptMode.AUTO
+    set(value) = prefs.edit { putBoolean(KEY_PROMPT_MODE_MANUAL, value == PromptMode.MANUAL) }
+
   var analysisIntervalSec: Int
     get() = prefs.getInt(KEY_INTERVAL, 3).coerceIn(2, 10)
     set(value) = prefs.edit { putInt(KEY_INTERVAL, value.coerceIn(2, 10)) }
@@ -49,6 +54,9 @@ class SettingsRepository(context: Context) {
   val selectedPrompt: PromptPreset
     get() = PromptPresets.preset(selectedPromptId)
 
+  val visionPrompt: ResolvedVisionPrompt
+    get() = PromptPresets.resolve(promptMode, selectedPromptId)
+
   fun hasApiKeyForCurrentProvider(): Boolean =
       when (provider) {
         AIProvider.GEMINI -> geminiApiKey.isNotBlank()
@@ -59,6 +67,7 @@ class SettingsRepository(context: Context) {
   companion object {
     private const val KEY_PROVIDER = "provider"
     private const val KEY_PROMPT = "prompt"
+    private const val KEY_PROMPT_MODE_MANUAL = "prompt_mode_manual"
     private const val KEY_INTERVAL = "interval"
     private const val KEY_AI_ENABLED = "ai_enabled"
     private const val KEY_TTS_ENABLED = "tts_enabled"

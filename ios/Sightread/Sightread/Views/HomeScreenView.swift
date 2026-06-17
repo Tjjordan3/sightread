@@ -21,7 +21,7 @@ struct HomeScreenView: View {
           .multilineTextAlignment(.center)
         VStack(spacing: 12) {
           HomeTipItemView(resource: .smartGlassesIcon, title: "Live vision", text: "Stream your point of view and understand the scene with AI.")
-          HomeTipItemView(resource: .soundIcon, title: "Smart prompts", text: "Presets for navigation, safety, reading text, and more.")
+          HomeTipItemView(resource: .soundIcon, title: "Smart prompts", text: "Vision adapts automatically — no preset to pick.")
           HomeTipItemView(resource: .walkingIcon, title: "Ray-Ban Meta", text: "Connect via Meta Wearables Device Access Toolkit.")
         }
         Spacer()

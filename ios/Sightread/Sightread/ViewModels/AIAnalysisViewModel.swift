@@ -75,7 +75,8 @@ final class AIAnalysisViewModel {
 
     do {
       let service = VisionAIServiceFactory.make(provider: settings.provider, settings: settings)
-      let result = try await service.analyze(jpegData: jpeg, prompt: settings.selectedPrompt.prompt)
+      let visionPrompt = settings.visionPrompt
+      let result = try await service.analyze(jpegData: jpeg, prompt: visionPrompt.prompt)
       guard !Task.isCancelled else { return }
 
       applyResult(result, promptSuffix: promptLabel)
@@ -90,7 +91,7 @@ final class AIAnalysisViewModel {
 
   private func applyResult(_ result: String, promptSuffix: String?) {
     latestResponse = result
-    let title = settings.selectedPrompt.title + (promptSuffix ?? "")
+    let title = settings.visionPrompt.title + (promptSuffix ?? "")
     responses.insert(
       AIResponseEntry(text: result, promptTitle: title, timestamp: Date()),
       at: 0

@@ -90,8 +90,9 @@ class AIAnalysisController(
                     quality = if (manual) 75 else 60,
                 ) ?: return@launch
             val service = VisionAIServiceFactory.create(settings.provider, settings)
-            val result = service.analyze(jpeg, settings.selectedPrompt.prompt)
-            val title = settings.selectedPrompt.title + if (manual) " (now)" else ""
+            val visionPrompt = settings.visionPrompt
+            val result = service.analyze(jpeg, visionPrompt.prompt)
+            val title = visionPrompt.title + if (manual) " (now)" else ""
             _uiState.update {
               val entries =
                   listOf(AIResponseEntry(result, title, System.currentTimeMillis())) + it.responses

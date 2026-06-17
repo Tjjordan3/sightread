@@ -39,7 +39,7 @@ struct AIResponsePanel: View {
       }
 
       HStack {
-        Text(settings.selectedPrompt.title)
+        Text(settings.visionPrompt.title)
           .font(.caption2)
           .foregroundStyle(.secondary)
         if settings.isTTSEnabled {

@@ -16,8 +16,18 @@ struct SettingsView: View {
           Picker("Provider", selection: $settings.provider) {
             ForEach(AIProvider.allCases) { Text($0.displayName).tag($0) }
           }
-          Picker("Prompt preset", selection: $settings.selectedPromptId) {
-            ForEach(PromptPresets.all) { Text($0.title).tag($0.id) }
+          Toggle("Smart prompts (recommended)", isOn: Binding(
+            get: { settings.promptMode == .auto },
+            set: { settings.promptMode = $0 ? .auto : .manual }
+          ))
+          if settings.promptMode == .auto {
+            Text("Sightread picks the best vision prompt automatically — no preset to choose.")
+              .font(.caption)
+              .foregroundStyle(.secondary)
+          } else {
+            Picker("Prompt preset", selection: $settings.selectedPromptId) {
+              ForEach(PromptPresets.all) { Text($0.title).tag($0.id) }
+            }
           }
           Stepper(value: $settings.analysisInterval, in: 2...10, step: 1) {
             Text("Analyze every \(Int(settings.analysisInterval))s")

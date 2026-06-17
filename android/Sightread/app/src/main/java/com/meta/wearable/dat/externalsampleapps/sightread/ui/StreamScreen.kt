@@ -99,7 +99,7 @@ fun StreamScreen(
       if (streamUiState.streamState == StreamState.STREAMING) {
         AIResponsePanel(
             aiState = aiState,
-            promptTitle = settings.selectedPrompt.title,
+            promptTitle = settings.visionPrompt.title,
             ttsEnabled = settings.isTTSEnabled,
         )
       }
