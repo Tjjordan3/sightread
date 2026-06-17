@@ -29,6 +29,7 @@ const INITIAL_STATE: AIUiState = {
 export function useAIAnalysis(settings: Settings) {
   const [state, setState] = useState<AIUiState>(INITIAL_STATE);
   const lastSampleMs = useRef(0);
+  const backoffMs = useRef(0);
   const isProcessing = useRef(false);
   const didShowMissingKeyError = useRef(false);
   const abortRef = useRef<AbortController | null>(null);
@@ -36,6 +37,7 @@ export function useAIAnalysis(settings: Settings) {
   const reset = useCallback(() => {
     abortRef.current?.abort();
     lastSampleMs.current = 0;
+    backoffMs.current = 0;
     isProcessing.current = false;
     didShowMissingKeyError.current = false;
     stopSpeaking();
@@ -79,13 +81,24 @@ export function useAIAnalysis(settings: Settings) {
         }));
 
         if (settings.isTTSEnabled) speak(result);
+        backoffMs.current = 0;
       } catch (err) {
         if (controller.signal.aborted) return;
+        const message =
+          err instanceof Error ? err.message : "Analysis failed.";
+        const isRateLimited = isRateLimitError(message);
+        if (isRateLimited) {
+          const intervalMs = settings.analysisIntervalSec * 1000;
+          backoffMs.current = Math.min(
+            120_000,
+            Math.max(intervalMs * 2, backoffMs.current * 2 || intervalMs * 3),
+          );
+          lastSampleMs.current = Date.now();
+        }
         setState((prev) => ({
           ...prev,
           analysisState: "error",
-          errorMessage:
-            err instanceof Error ? err.message : "Analysis failed.",
+          errorMessage: message,
         }));
       } finally {
         isProcessing.current = false;
@@ -113,10 +126,8 @@ export function useAIAnalysis(settings: Settings) {
       didShowMissingKeyError.current = false;
 
       const now = Date.now();
-      if (
-        isProcessing.current ||
-        now - lastSampleMs.current < settings.analysisIntervalSec * 1000
-      ) {
+      const waitMs = settings.analysisIntervalSec * 1000 + backoffMs.current;
+      if (isProcessing.current || now - lastSampleMs.current < waitMs) {
         return;
       }
       lastSampleMs.current = now;
@@ -136,4 +147,15 @@ export function useAIAnalysis(settings: Settings) {
   );
 
   return { state, processFrame, analyzeNow, reset };
+}
+
+function isRateLimitError(message: string): boolean {
+  const lower = message.toLowerCase();
+  return (
+    lower.includes("rate limit") ||
+    lower.includes("rate_limit") ||
+    lower.includes("too many requests") ||
+    lower.includes("429") ||
+    lower.includes("quota")
+  );
 }

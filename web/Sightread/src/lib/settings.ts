@@ -42,7 +42,7 @@ const DEFAULTS: Settings = {
   openrouterModel: "google/gemini-2.0-flash-001",
   promptMode: "auto",
   selectedPromptId: "scene",
-  analysisIntervalSec: 3,
+  analysisIntervalSec: 10,
   isAIEnabled: true,
   isTTSEnabled: false,
   speakChatReplies: true,
@@ -86,8 +86,8 @@ export function loadSettings(): Settings {
       theme,
       promptMode: parsed.promptMode === "manual" ? "manual" : "auto",
       analysisIntervalSec: Math.min(
-        10,
-        Math.max(2, parsed.analysisIntervalSec ?? DEFAULTS.analysisIntervalSec),
+        30,
+        Math.max(5, parsed.analysisIntervalSec ?? DEFAULTS.analysisIntervalSec),
       ),
       silenceTimeoutMs: Math.min(
         3000,

@@ -37,7 +37,7 @@ export function ChatComposer({
   onMicPress,
   voiceConversation,
   onStartVoiceConversation,
-  onStopVoiceConversation,
+  onStopVoiceConversation: _onStopVoiceConversation,
   speechSupported,
   wakeWordHint,
 }: ChatComposerProps) {
@@ -85,19 +85,6 @@ export function ChatComposer({
           />
           Attach live camera frame
         </label>
-      )}
-
-      {voiceConversation && (
-        <div className="chat-composer__voice-banner">
-          <span>Voice conversation active — speak, then pause to send</span>
-          <button
-            type="button"
-            className="btn btn--ghost"
-            onClick={onStopVoiceConversation}
-          >
-            Stop
-          </button>
-        </div>
       )}
 
       {wakeWordHint && !voiceConversation && (

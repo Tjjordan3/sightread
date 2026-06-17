@@ -43,8 +43,11 @@ export function useSpeechRecognition(options: UseSpeechRecognitionOptions = {}) 
   const [error, setError] = useState("");
   const optionsRef = useRef(options);
   const shouldRestartRef = useRef(false);
+  const pausedRef = useRef(false);
+  const wantsListeningRef = useRef(false);
   const continuousRef = useRef(false);
   const startRef = useRef<(continuous?: boolean) => void>(() => {});
+  const resumeRef = useRef<() => void>(() => {});
 
   useEffect(() => {
     optionsRef.current = options;
@@ -54,9 +57,23 @@ export function useSpeechRecognition(options: UseSpeechRecognitionOptions = {}) 
 
   const stop = useCallback(() => {
     shouldRestartRef.current = false;
+    pausedRef.current = false;
+    wantsListeningRef.current = false;
     recognitionRef.current?.stop();
     recognitionRef.current = null;
     setStatus("idle");
+  }, []);
+
+  const pause = useCallback(() => {
+    pausedRef.current = true;
+    shouldRestartRef.current = false;
+    recognitionRef.current?.stop();
+  }, []);
+
+  const resume = useCallback(() => {
+    if (!wantsListeningRef.current) return;
+    pausedRef.current = false;
+    startRef.current(continuousRef.current);
   }, []);
 
   const start = useCallback((continuous = optionsRef.current.continuous ?? false) => {
@@ -68,10 +85,18 @@ export function useSpeechRecognition(options: UseSpeechRecognitionOptions = {}) 
     }
 
     continuousRef.current = continuous;
+    wantsListeningRef.current = true;
+    pausedRef.current = false;
     shouldRestartRef.current =
       continuous || (optionsRef.current.autoRestart ?? false);
 
-    recognitionRef.current?.abort();
+    const existing = recognitionRef.current;
+    if (existing) {
+      existing.onend = null;
+      existing.onerror = null;
+      existing.abort();
+      recognitionRef.current = null;
+    }
 
     const recognition = new Ctor();
     recognition.lang = navigator.language || "en-US";
@@ -97,6 +122,7 @@ export function useSpeechRecognition(options: UseSpeechRecognitionOptions = {}) 
 
     recognition.onerror = (event) => {
       if (event.error === "no-speech" || event.error === "aborted") return;
+      if (recognitionRef.current !== recognition) return;
       setStatus("error");
       setError(
         event.error === "not-allowed"
@@ -104,32 +130,43 @@ export function useSpeechRecognition(options: UseSpeechRecognitionOptions = {}) 
           : event.error,
       );
       shouldRestartRef.current = false;
+      wantsListeningRef.current = false;
       recognitionRef.current = null;
     };
 
     recognition.onend = () => {
+      if (recognitionRef.current !== recognition) return;
       recognitionRef.current = null;
       setStatus("idle");
+      if (pausedRef.current) return;
       if (shouldRestartRef.current) {
         window.setTimeout(() => {
-          if (shouldRestartRef.current) {
+          if (shouldRestartRef.current && !pausedRef.current) {
             startRef.current(continuousRef.current);
           }
-        }, 250);
+        }, 300);
       }
     };
 
     recognitionRef.current = recognition;
-    recognition.start();
+    try {
+      recognition.start();
+    } catch {
+      recognitionRef.current = null;
+      setStatus("error");
+      setError("Could not start speech recognition.");
+      shouldRestartRef.current = false;
+    }
   }, []);
 
   useEffect(() => {
     startRef.current = start;
-  }, [start]);
+    resumeRef.current = resume;
+  }, [resume, start]);
 
   useEffect(() => () => stop(), [stop]);
 
-  return { isSupported, status, error, start, stop };
+  return { isSupported, status, error, start, stop, pause, resume };
 }
 
 function getSpeechRecognitionCtor(): (new () => SpeechRecognition) | null {

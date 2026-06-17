@@ -157,8 +157,8 @@ export function SettingsScreen({
           <span>Analyze every {draft.analysisIntervalSec}s</span>
           <input
             type="range"
-            min={2}
-            max={10}
+            min={5}
+            max={30}
             step={1}
             value={draft.analysisIntervalSec}
             onChange={(e) =>

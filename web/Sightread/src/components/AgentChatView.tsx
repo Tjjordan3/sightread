@@ -4,6 +4,7 @@ import { useSpeechRecognition } from "../hooks/useSpeechRecognition";
 import { useVoiceSession } from "../hooks/useVoiceSession";
 import type { ChatMessage } from "../lib/chat";
 import type { Settings } from "../lib/settings";
+import { warmUpSpeech } from "../lib/speech";
 import { WAKE_PHRASE } from "../lib/voice/wakeWord";
 import { ChatComposer } from "./ChatComposer";
 import { ChatMessageList } from "./ChatMessageList";
@@ -37,6 +38,8 @@ export function AgentChatView({
   const voiceConversationRef = useRef(false);
   const startListeningRef = useRef<(continuous?: boolean) => void>(() => {});
   const stopListeningRef = useRef<() => void>(() => {});
+  const pauseListeningRef = useRef<() => void>(() => {});
+  const resumeListeningRef = useRef<() => void>(() => {});
   const voiceHandlersRef = useRef({
     onInterim: (text: string) => { void text; },
     onFinal: (text: string) => { void text; },
@@ -56,6 +59,8 @@ export function AgentChatView({
   useEffect(() => {
     startListeningRef.current = (continuous = false) => speech.start(continuous);
     stopListeningRef.current = () => speech.stop();
+    pauseListeningRef.current = () => speech.pause();
+    resumeListeningRef.current = () => speech.resume();
   }, [speech]);
 
   const chat = useAgentChat({
@@ -65,16 +70,19 @@ export function AgentChatView({
     onUserMessage,
     onAssistantMessage,
     onBeforeSpeak: () => {
-      stopListeningRef.current();
+      pauseListeningRef.current();
       voiceHandlersRef.current.markSpeaking();
     },
     onAfterSpeak: () => {
       voiceHandlersRef.current.markIdle();
     },
     onReplySpoken: () => {
-      if (voiceConversationRef.current || settings.alwaysListening) {
-        startListeningRef.current(true);
-      }
+      if (!voiceConversationRef.current && !settings.alwaysListening) return;
+      window.setTimeout(() => {
+        if (voiceConversationRef.current || settings.alwaysListening) {
+          resumeListeningRef.current();
+        }
+      }, 500);
     },
   });
 
@@ -113,6 +121,7 @@ export function AgentChatView({
   }, [chat.messages, chat.isSending]);
 
   const handleMicPress = () => {
+    warmUpSpeech();
     if (speech.status === "listening") speech.stop();
     else speech.start(false);
   };
@@ -158,7 +167,18 @@ export function AgentChatView({
       </header>
 
       {voiceLabel && (
-        <p className={`voice-status voice-status--${voice.phase}`}>{voiceLabel}</p>
+        <div className={`voice-status voice-status--${voice.phase}`} role="status">
+          <span>{voiceLabel}</span>
+          {chat.voiceConversation && (
+            <button
+              type="button"
+              className="btn btn--ghost btn--compact"
+              onClick={() => voiceHandlersRef.current.stopVoiceChat()}
+            >
+              Stop
+            </button>
+          )}
+        </div>
       )}
 
       {error && <p className="chat-panel__error">{error}</p>}
@@ -184,7 +204,10 @@ export function AgentChatView({
         speechStatus={speech.status}
         onMicPress={handleMicPress}
         voiceConversation={chat.voiceConversation}
-        onStartVoiceConversation={() => voiceHandlersRef.current.startVoiceChat()}
+        onStartVoiceConversation={() => {
+          warmUpSpeech();
+          voiceHandlersRef.current.startVoiceChat();
+        }}
         onStopVoiceConversation={() => voiceHandlersRef.current.stopVoiceChat()}
         speechSupported={speech.isSupported}
         wakeWordHint={settings.wakeWordEnabled ? WAKE_PHRASE : undefined}
