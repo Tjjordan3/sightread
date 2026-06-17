@@ -14,12 +14,12 @@ Kotlin + Jetpack Compose companion for Ray-Ban Meta glasses, based on Meta's Cam
 
 3. Enable Developer Mode in Meta AI and pair glasses (see `/docs/DEVELOPER_MODE.md`).
 
-4. In-app: menu → **AI Settings** → add Gemini and/or OpenAI API keys.
+4. In-app: menu → **AI Settings** → add Gemini, OpenAI, and/or Groq API keys.
 
 ## Features
 
 - DAT camera streaming (best-effort 720p/30; may auto-adjust)
-- Gemini 2.0 Flash / OpenAI GPT-4o-mini vision analysis
+- Gemini 2.0 Flash / OpenAI GPT-4o-mini / Groq Llama 4 Scout vision analysis
 - Live AI response panel + Analyze now
 - In-app Chat + optional attach current frame
 - Optional TTS to glasses speakers (Bluetooth SCO)

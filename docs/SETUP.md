@@ -25,7 +25,7 @@ URL scheme for Meta AI callbacks: `sightread://`
 
 1. Run Sightread on your iPhone.
 2. Tap **gear** → **AI Settings**.
-3. Paste a **Gemini** key from [Google AI Studio](https://aistudio.google.com/) (free tier) and/or an **OpenAI** key.
+3. Paste a **Gemini** key from [Google AI Studio](https://aistudio.google.com/) (free tier), an **OpenAI** key, and/or a **Groq** key from [console.groq.com](https://console.groq.com/).
 4. Choose provider, prompt preset, and analysis interval (2–10 seconds).
 
 Sightread runs without keys — AI features are enabled once you add them in Settings.
@@ -61,7 +61,7 @@ Sightread only sends a frame when you explicitly attach it.
 |-------|-----|
 | No devices listed | Complete registration; request camera permission |
 | Stream won''t start | Glasses on face, unfolded, charged >10% |
-| AI errors | Check API key, network, Gemini/OpenAI quota |
+| AI errors | Check API key, network, Gemini/OpenAI/Groq quota |
 | Meta AI callback fails | Verify `sightread://` URL scheme matches Info.plist |
 
 Docs: https://wearables.developer.meta.com/docs/develop/

@@ -4,7 +4,11 @@ import android.content.Context
 import android.content.SharedPreferences
 import androidx.core.content.edit
 
-enum class AIProvider { GEMINI, OPENAI }
+enum class AIProvider(val displayName: String) {
+  GEMINI("Gemini"),
+  OPENAI("OpenAI"),
+  GROQ("Groq"),
+}
 
 class SettingsRepository(context: Context) {
   private val prefs: SharedPreferences =
@@ -38,6 +42,10 @@ class SettingsRepository(context: Context) {
     get() = prefs.getString(KEY_OPENAI, "") ?: ""
     set(value) = prefs.edit { putString(KEY_OPENAI, value) }
 
+  var groqApiKey: String
+    get() = prefs.getString(KEY_GROQ, "") ?: ""
+    set(value) = prefs.edit { putString(KEY_GROQ, value) }
+
   val selectedPrompt: PromptPreset
     get() = PromptPresets.preset(selectedPromptId)
 
@@ -45,6 +53,7 @@ class SettingsRepository(context: Context) {
       when (provider) {
         AIProvider.GEMINI -> geminiApiKey.isNotBlank()
         AIProvider.OPENAI -> openAIApiKey.isNotBlank()
+        AIProvider.GROQ -> groqApiKey.isNotBlank()
       }
 
   companion object {
@@ -55,5 +64,6 @@ class SettingsRepository(context: Context) {
     private const val KEY_TTS_ENABLED = "tts_enabled"
     private const val KEY_GEMINI = "gemini_key"
     private const val KEY_OPENAI = "openai_key"
+    private const val KEY_GROQ = "groq_key"
   }
 }

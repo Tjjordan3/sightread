@@ -2,9 +2,15 @@ import Foundation
 import Observation
 
 enum AIProvider: String, CaseIterable, Identifiable {
-  case gemini, openai
+  case gemini, openai, groq
   var id: String { rawValue }
-  var displayName: String { self == .gemini ? "Gemini" : "OpenAI" }
+  var displayName: String {
+    switch self {
+    case .gemini: return "Gemini"
+    case .openai: return "OpenAI"
+    case .groq: return "Groq"
+    }
+  }
 }
 
 @Observable @MainActor
@@ -18,6 +24,7 @@ final class SettingsStore {
     static let ttsEnabled = "sightread.tts.enabled"
     static let geminiKey = "sightread.key.gemini"
     static let openaiKey = "sightread.key.openai"
+    static let groqKey = "sightread.key.groq"
   }
   var provider: AIProvider { didSet { UserDefaults.standard.set(provider.rawValue, forKey: Keys.provider) } }
   var selectedPromptId: String { didSet { UserDefaults.standard.set(selectedPromptId, forKey: Keys.promptId) } }
@@ -26,8 +33,15 @@ final class SettingsStore {
   var isTTSEnabled: Bool { didSet { UserDefaults.standard.set(isTTSEnabled, forKey: Keys.ttsEnabled) } }
   var geminiAPIKey: String { get { KeychainStore.load(account: Keys.geminiKey) ?? "" } set { newValue.isEmpty ? KeychainStore.delete(account: Keys.geminiKey) : KeychainStore.save(newValue, account: Keys.geminiKey) } }
   var openAIAPIKey: String { get { KeychainStore.load(account: Keys.openaiKey) ?? "" } set { newValue.isEmpty ? KeychainStore.delete(account: Keys.openaiKey) : KeychainStore.save(newValue, account: Keys.openaiKey) } }
+  var groqAPIKey: String { get { KeychainStore.load(account: Keys.groqKey) ?? "" } set { newValue.isEmpty ? KeychainStore.delete(account: Keys.groqKey) : KeychainStore.save(newValue, account: Keys.groqKey) } }
   var selectedPrompt: PromptPreset { PromptPresets.preset(id: selectedPromptId) }
-  var hasAPIKeyForCurrentProvider: Bool { provider == .gemini ? !geminiAPIKey.isEmpty : !openAIAPIKey.isEmpty }
+  var hasAPIKeyForCurrentProvider: Bool {
+    switch provider {
+    case .gemini: return !geminiAPIKey.isEmpty
+    case .openai: return !openAIAPIKey.isEmpty
+    case .groq: return !groqAPIKey.isEmpty
+    }
+  }
   private init() {
     let d = UserDefaults.standard
     provider = AIProvider(rawValue: d.string(forKey: Keys.provider) ?? "") ?? .gemini

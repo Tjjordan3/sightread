@@ -22,6 +22,7 @@ enum VisionAIServiceFactory {
     switch provider {
     case .gemini: return GeminiVisionService(apiKey: settings.geminiAPIKey)
     case .openai: return OpenAIVisionService(apiKey: settings.openAIAPIKey)
+    case .groq: return GroqVisionService(apiKey: settings.groqAPIKey)
     }
   }
 }

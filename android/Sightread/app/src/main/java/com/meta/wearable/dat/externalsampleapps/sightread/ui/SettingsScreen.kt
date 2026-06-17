@@ -35,6 +35,7 @@ import com.meta.wearable.dat.externalsampleapps.sightread.ai.SettingsRepository
 fun SettingsScreen(settings: SettingsRepository, onDone: () -> Unit, modifier: Modifier = Modifier) {
   var geminiKey by remember { mutableStateOf(settings.geminiApiKey) }
   var openAIKey by remember { mutableStateOf(settings.openAIApiKey) }
+  var groqKey by remember { mutableStateOf(settings.groqApiKey) }
   var interval by remember { mutableIntStateOf(settings.analysisIntervalSec) }
 
   Column(modifier = modifier.fillMaxSize()) {
@@ -68,11 +69,18 @@ fun SettingsScreen(settings: SettingsRepository, onDone: () -> Unit, modifier: M
           label = { Text("OpenAI API key") },
           modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
       )
+      OutlinedTextField(
+          value = groqKey,
+          onValueChange = { groqKey = it },
+          label = { Text("Groq API key") },
+          modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+      )
 
       Button(
           onClick = {
             settings.geminiApiKey = geminiKey
             settings.openAIApiKey = openAIKey
+            settings.groqApiKey = groqKey
             settings.analysisIntervalSec = interval
             onDone()
           },
@@ -100,7 +108,7 @@ private fun ProviderDropdown(settings: SettingsRepository) {
   var expanded by remember { mutableStateOf(false) }
   ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = it }) {
     OutlinedTextField(
-        value = settings.provider.name,
+        value = settings.provider.displayName,
         onValueChange = {},
         readOnly = true,
         label = { Text("Provider") },
@@ -110,7 +118,7 @@ private fun ProviderDropdown(settings: SettingsRepository) {
     ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
       AIProvider.entries.forEach { p ->
         DropdownMenuItem(
-            text = { Text(p.name) },
+            text = { Text(p.displayName) },
             onClick = {
               settings.provider = p
               expanded = false

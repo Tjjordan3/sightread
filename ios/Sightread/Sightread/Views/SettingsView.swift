@@ -5,6 +5,7 @@ struct SettingsView: View {
   @Environment(\.dismiss) private var dismiss
   @State private var geminiKey = ""
   @State private var openAIKey = ""
+  @State private var groqKey = ""
 
   var body: some View {
     NavigationStack {
@@ -25,7 +26,9 @@ struct SettingsView: View {
         Section("API keys (stored in Keychain)") {
           SecureField("Gemini API key", text: $geminiKey)
           SecureField("OpenAI API key", text: $openAIKey)
+          SecureField("Groq API key", text: $groqKey)
           Text("Get a free Gemini key at aistudio.google.com").font(.caption).foregroundStyle(.secondary)
+          Text("Get a Groq key at console.groq.com").font(.caption).foregroundStyle(.secondary)
         }
       }
       .navigationTitle("Settings")
@@ -34,6 +37,7 @@ struct SettingsView: View {
           Button("Done") {
             settings.geminiAPIKey = geminiKey
             settings.openAIAPIKey = openAIKey
+            settings.groqAPIKey = groqKey
             dismiss()
           }
         }
@@ -41,6 +45,7 @@ struct SettingsView: View {
       .onAppear {
         geminiKey = settings.geminiAPIKey
         openAIKey = settings.openAIAPIKey
+        groqKey = settings.groqAPIKey
       }
     }
   }

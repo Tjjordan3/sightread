@@ -4,7 +4,7 @@ Browser companion for Sightread — live webcam vision AI, chat, and prompt pres
 
 ## Features
 
-- Webcam streaming with throttled vision analysis (Gemini 2.0 Flash / OpenAI GPT-4o-mini)
+- Webcam streaming with throttled vision analysis (Gemini 2.0 Flash / OpenAI GPT-4o-mini / Groq Llama 4 Scout)
 - Live AI response panel during streaming
 - **Analyze now** for an immediate high-detail snapshot
 - **Upload photo** for one-off analysis
@@ -21,7 +21,7 @@ npm install
 npm run dev
 ```
 
-Open the URL shown (typically `http://localhost:5173`). Use **Settings** to add Gemini and/or OpenAI API keys, then **Start with webcam**.
+Open the URL shown (typically `http://localhost:5173`). Use **Settings** to add Gemini, OpenAI, and/or Groq API keys, then **Start with webcam**.
 
 ### Production build
 
@@ -43,10 +43,10 @@ Deploy the `dist/` folder to any static host (Vercel, Netlify, GitHub Pages, etc
 
 ## API keys
 
-Same as mobile: add keys in **Settings** after launch. Keys are sent directly from your browser to Gemini or OpenAI — no Sightread backend.
+Same as mobile: add keys in **Settings** after launch. Keys are sent directly from your browser to Gemini, OpenAI, or Groq — no Sightread backend.
 
 ## Requirements
 
 - Modern browser with `getUserMedia` (Chrome, Firefox, Safari, Edge)
-- Gemini key from [Google AI Studio](https://aistudio.google.com/) and/or OpenAI key
+- Gemini key from [Google AI Studio](https://aistudio.google.com/), OpenAI key, and/or Groq key from [console.groq.com](https://console.groq.com/)
 - HTTPS required for camera access in production (localhost is exempt)

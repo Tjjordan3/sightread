@@ -1,6 +1,6 @@
 import { getPromptPreset } from "./promptPresets";
 
-export type AIProvider = "gemini" | "openai";
+export type AIProvider = "gemini" | "openai" | "groq";
 
 export interface Settings {
   provider: AIProvider;
@@ -10,6 +10,7 @@ export interface Settings {
   isTTSEnabled: boolean;
   geminiApiKey: string;
   openAIApiKey: string;
+  groqApiKey: string;
 }
 
 const STORAGE_KEY = "sightread_settings";
@@ -22,6 +23,7 @@ const DEFAULTS: Settings = {
   isTTSEnabled: false,
   geminiApiKey: "",
   openAIApiKey: "",
+  groqApiKey: "",
 };
 
 export function loadSettings(): Settings {
@@ -50,9 +52,14 @@ export function hasApiKeyForProvider(
   settings: Settings,
   provider: AIProvider = settings.provider,
 ): boolean {
-  return provider === "gemini"
-    ? settings.geminiApiKey.trim().length > 0
-    : settings.openAIApiKey.trim().length > 0;
+  switch (provider) {
+    case "gemini":
+      return settings.geminiApiKey.trim().length > 0;
+    case "openai":
+      return settings.openAIApiKey.trim().length > 0;
+    case "groq":
+      return settings.groqApiKey.trim().length > 0;
+  }
 }
 
 export function getSelectedPrompt(settings: Settings) {
@@ -60,7 +67,12 @@ export function getSelectedPrompt(settings: Settings) {
 }
 
 export function getApiKey(settings: Settings): string {
-  return settings.provider === "gemini"
-    ? settings.geminiApiKey
-    : settings.openAIApiKey;
+  switch (settings.provider) {
+    case "gemini":
+      return settings.geminiApiKey;
+    case "openai":
+      return settings.openAIApiKey;
+    case "groq":
+      return settings.groqApiKey;
+  }
 }

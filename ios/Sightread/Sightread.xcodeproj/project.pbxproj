@@ -43,6 +43,7 @@
 		SR0100072F95000100000001 /* VisionAIService.swift in Sources */ = {isa = PBXBuildFile; fileRef = SR0100062F95000100000001 /* VisionAIService.swift */; };
 		SR0100092F95000100000001 /* GeminiVisionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = SR0100082F95000100000001 /* GeminiVisionService.swift */; };
 		SR01000B2F95000100000001 /* OpenAIVisionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = SR01000A2F95000100000001 /* OpenAIVisionService.swift */; };
+		SR0100192F95000100000001 /* GroqVisionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = SR0100182F95000100000001 /* GroqVisionService.swift */; };
 		SR01000D2F95000100000001 /* FrameSampler.swift in Sources */ = {isa = PBXBuildFile; fileRef = SR01000C2F95000100000001 /* FrameSampler.swift */; };
 		SR01000F2F95000100000001 /* AIAnalysisViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = SR01000E2F95000100000001 /* AIAnalysisViewModel.swift */; };
 		SR0100112F95000100000001 /* AIResponsePanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = SR0100102F95000100000001 /* AIResponsePanel.swift */; };
@@ -123,6 +124,7 @@
 		SR0100062F95000100000001 /* VisionAIService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VisionAIService.swift; sourceTree = "<group>"; };
 		SR0100082F95000100000001 /* GeminiVisionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeminiVisionService.swift; sourceTree = "<group>"; };
 		SR01000A2F95000100000001 /* OpenAIVisionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenAIVisionService.swift; sourceTree = "<group>"; };
+		SR0100182F95000100000001 /* GroqVisionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroqVisionService.swift; sourceTree = "<group>"; };
 		SR01000C2F95000100000001 /* FrameSampler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FrameSampler.swift; sourceTree = "<group>"; };
 		SR01000E2F95000100000001 /* AIAnalysisViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIAnalysisViewModel.swift; sourceTree = "<group>"; };
 		SR0100102F95000100000001 /* AIResponsePanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIResponsePanel.swift; sourceTree = "<group>"; };
@@ -206,6 +208,7 @@
 				SR0100062F95000100000001 /* VisionAIService.swift */,
 				SR0100082F95000100000001 /* GeminiVisionService.swift */,
 				SR01000A2F95000100000001 /* OpenAIVisionService.swift */,
+				SR0100182F95000100000001 /* GroqVisionService.swift */,
 				SR01000C2F95000100000001 /* FrameSampler.swift */,
 				SR0100142F95000100000001 /* AudioRouteManager.swift */,
 				SR0100162F95000100000001 /* SpeechService.swift */,
@@ -485,6 +488,7 @@
 				SR0100072F95000100000001 /* VisionAIService.swift in Sources */,
 				SR0100092F95000100000001 /* GeminiVisionService.swift in Sources */,
 				SR01000B2F95000100000001 /* OpenAIVisionService.swift in Sources */,
+				SR0100192F95000100000001 /* GroqVisionService.swift in Sources */,
 				SR01000D2F95000100000001 /* FrameSampler.swift in Sources */,
 				SR01000F2F95000100000001 /* AIAnalysisViewModel.swift in Sources */,
 				SR0100112F95000100000001 /* AIResponsePanel.swift in Sources */,

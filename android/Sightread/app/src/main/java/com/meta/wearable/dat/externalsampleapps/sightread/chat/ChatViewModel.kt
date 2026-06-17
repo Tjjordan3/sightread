@@ -79,6 +79,7 @@ class ChatViewModel(private val settings: SettingsRepository) : ViewModel() {
         when (settings.provider) {
           AIProvider.GEMINI -> geminiChat(transcript, attachedImage)
           AIProvider.OPENAI -> openAIChat(transcript, attachedImage)
+          AIProvider.GROQ -> groqChat(transcript, attachedImage)
         }
       }
 
@@ -145,6 +146,53 @@ class ChatViewModel(private val settings: SettingsRepository) : ViewModel() {
     val body =
         JSONObject()
             .put("model", "gpt-4o-mini")
+            .put("max_tokens", 400)
+            .put("messages", JSONArray().put(JSONObject().put("role", "user").put("content", content)))
+
+    val conn =
+        (url.openConnection() as HttpURLConnection).apply {
+          requestMethod = "POST"
+          setRequestProperty("Content-Type", "application/json")
+          setRequestProperty("Authorization", "Bearer $apiKey")
+          doOutput = true
+          outputStream.use { it.write(body.toString().toByteArray()) }
+        }
+
+    val code = conn.responseCode
+    val text =
+        (if (code in 200..299) conn.inputStream else conn.errorStream).bufferedReader().readText()
+    if (code !in 200..299) error("API error $code: $text")
+
+    return JSONObject(text)
+        .getJSONArray("choices")
+        .getJSONObject(0)
+        .getJSONObject("message")
+        .getString("content")
+        .trim()
+  }
+
+  private fun groqChat(transcript: String, attachedImage: Bitmap?): String {
+    val apiKey = settings.groqApiKey
+    require(apiKey.isNotBlank()) { "Add a Groq API key in Settings." }
+    val url = URL("https://api.groq.com/openai/v1/chat/completions")
+
+    val content =
+        JSONArray()
+            .put(JSONObject().put("type", "text").put("text", transcript))
+
+    if (attachedImage != null) {
+      val jpeg = ImageEncoding.jpegBytes(attachedImage, maxWidth = 512, quality = 60) ?: error("Failed to encode image")
+      val base64 = Base64.encodeToString(jpeg, Base64.NO_WRAP)
+      content.put(
+          JSONObject()
+              .put("type", "image_url")
+              .put("image_url", JSONObject().put("url", "data:image/jpeg;base64,$base64")),
+      )
+    }
+
+    val body =
+        JSONObject()
+            .put("model", "meta-llama/llama-4-scout-17b-16e-instruct")
             .put("max_tokens", 400)
             .put("messages", JSONArray().put(JSONObject().put("role", "user").put("content", content)))
 

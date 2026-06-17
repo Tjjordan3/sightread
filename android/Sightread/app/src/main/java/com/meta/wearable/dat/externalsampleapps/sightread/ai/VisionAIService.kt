@@ -12,6 +12,7 @@ object VisionAIServiceFactory {
       when (provider) {
         AIProvider.GEMINI -> GeminiVisionService(settings.geminiApiKey)
         AIProvider.OPENAI -> OpenAIVisionService(settings.openAIApiKey)
+        AIProvider.GROQ -> GroqVisionService(settings.groqApiKey)
       }
 }
 

@@ -60,6 +60,7 @@ export function SettingsScreen({
           >
             <option value="gemini">Gemini</option>
             <option value="openai">OpenAI</option>
+            <option value="groq">Groq</option>
           </select>
         </label>
 
@@ -122,9 +123,22 @@ export function SettingsScreen({
           />
         </label>
 
+        <label className="field">
+          <span>Groq API key</span>
+          <input
+            type="password"
+            autoComplete="off"
+            value={draft.groqApiKey}
+            onChange={(e) =>
+              setDraft({ ...draft, groqApiKey: e.target.value })
+            }
+            placeholder="gsk_…"
+          />
+        </label>
+
         <p className="footnote">
           Keys are stored in this browser only (localStorage). They are sent
-          directly to Gemini or OpenAI from your device.
+          directly to Gemini, OpenAI, or Groq from your device.
         </p>
 
         <button

@@ -1,12 +1,12 @@
 # Sightread
 
-**Read the world through your frames.** Sightread is an iOS companion app for Ray-Ban Meta glasses that streams first-person video via the [Meta Wearables Device Access Toolkit](https://wearables.developer.meta.com/) and sends sampled frames to Gemini or OpenAI for real-time vision analysis.
+**Read the world through your frames.** Sightread is an iOS companion app for Ray-Ban Meta glasses that streams first-person video via the [Meta Wearables Device Access Toolkit](https://wearables.developer.meta.com/) and sends sampled frames to Gemini, OpenAI, or Groq for real-time vision analysis.
 
 ## Features
 
 - Camera streaming from Ray-Ban Meta (Gen 1/2) through DAT SDK
 - Best-effort streaming target: **720p / 30 FPS** (may auto-adjust based on Bluetooth bandwidth)
-- Throttled vision AI (Gemini 2.0 Flash default, OpenAI GPT-4o-mini fallback)
+- Throttled vision AI (Gemini 2.0 Flash default, OpenAI GPT-4o-mini or Groq Llama 4 Scout fallback)
 - Live AI response panel during streaming
 - In-app **Chat** with optional “attach current frame”
 - Prompt presets (scene, navigation, accessibility, safety, shopping, social)
@@ -39,7 +39,7 @@ sightread/
 ### Web (browser companion)
 
 1. `cd web/Sightread && npm install && npm run dev`
-2. Add Gemini/OpenAI keys in **Settings** (stored in browser localStorage).
+2. Add Gemini, OpenAI, and/or Groq keys in **Settings** (stored in browser localStorage).
 3. **Start with webcam** — no Meta glasses or DAT SDK required.
 
 See [web/Sightread/README.md](web/Sightread/README.md) for build and deploy details.
@@ -48,12 +48,12 @@ See [web/Sightread/README.md](web/Sightread/README.md) for build and deploy deta
 
 - iPhone, iOS 16+, Xcode 15+
 - Meta AI app v254+, Ray-Ban Meta firmware v20+
-- Google AI Studio (Gemini) and/or OpenAI API key
+- Google AI Studio (Gemini), OpenAI, and/or Groq API key
 
 ## API keys (no code changes)
 
 Sightread does **not** require AI keys at build time. Add keys in-app:
-- iOS: **Settings** → paste Gemini/OpenAI keys (stored in Keychain)
+- iOS: **Settings** → paste Gemini/OpenAI/Groq keys (stored in Keychain)
 - Android: **AI Settings** → paste keys (stored on-device)
 - Web: **Settings** → paste keys (stored in browser localStorage)
 
