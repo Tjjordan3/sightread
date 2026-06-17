@@ -44,6 +44,16 @@ npm run preview
 
 Deploy the `dist/` folder to any static host (Vercel, Netlify, GitHub Pages, etc.).
 
+## Roadmap
+
+Planned next steps for the Meta AI–style web experience:
+
+- Conversation history persistence (IndexedDB)
+- Always-listening / improved voice session modes
+- Installable mobile PWA shell
+
+See [docs/WEB_ROADMAP.md](../../docs/WEB_ROADMAP.md) for architecture, phases, and tradeoffs.
+
 ## Browser requirements
 
 | Capability | Chrome / Edge | Safari | Firefox |

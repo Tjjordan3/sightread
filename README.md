@@ -24,7 +24,7 @@
 
 ```
 sightread/
-  docs/              Setup, developer mode, sample prompts
+  docs/              Setup, developer mode, sample prompts, web roadmap
   ios/Sightread/     Xcode project (SwiftUI + DAT SDK 0.7)
   android/Sightread/ Gradle project (Compose + DAT SDK 0.7)
   web/Sightread/     Browser companion (Vite + React + webcam)
@@ -43,6 +43,8 @@ sightread/
 3. Use the **Agent** tab for Meta AI–style chat (text, photos, voice) or **Vision** for live webcam analysis.
 
 See [web/Sightread/README.md](web/Sightread/README.md) for build and deploy details.
+
+Upcoming web work (persistence, voice, PWA): [docs/WEB_ROADMAP.md](docs/WEB_ROADMAP.md).
 
 ## Requirements
 
