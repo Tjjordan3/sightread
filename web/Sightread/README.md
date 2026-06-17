@@ -57,23 +57,23 @@ Deploy `dist/` to any static HTTPS host.
 
 ### NVIDIA NIM on IIS (CORS proxy required)
 
-NVIDIA's API does **not** allow direct browser calls (no CORS). Sightread routes NVIDIA requests through a same-origin path: `/api/nvidia/v1/chat/completions`.
+NVIDIA's API does **not** allow direct browser calls (no CORS). Sightread routes NVIDIA requests through `/api/nvidia/v1/...` on your server.
 
-The build includes `web.config` with an IIS rewrite rule that proxies to NVIDIA. Requirements:
+**On the Windows server (required):**
 
-1. **IIS URL Rewrite** module installed
-2. **Application Request Routing (ARR)** installed with **Enable proxy** checked (IIS Manager → Server → Application Request Routing Cache → Server Proxy Settings)
-
-Then deploy as usual — `web.config` is copied into `dist/` automatically.
-
-**If ARR is not available**, run the Node fallback on the server:
+1. Build and deploy `dist/` (includes `web.config`).
+2. Start the local proxy and leave it running:
 
 ```cmd
 cd web\Sightread
-npm run nvidia-proxy
+scripts\start-nvidia-proxy.cmd
 ```
 
-Change the rewrite rule in `web.config` to point at `http://127.0.0.1:8788/v1/{R:1}` instead of the NVIDIA URL directly. Run the proxy as a Windows service or scheduled task so it stays up.
+3. In the app: **Settings → NVIDIA → Test NVIDIA connection**.
+
+`web.config` rewrites `/api/nvidia/*` → `http://127.0.0.1:8788/*`. Only **IIS URL Rewrite** is needed (ARR not required for this setup).
+
+Run the proxy as a Windows Service or Scheduled Task at startup so it survives reboots.
 
 ## Storage
 

@@ -1,9 +1,6 @@
 /**
- * Fallback NVIDIA proxy when IIS ARR reverse-proxy is not available.
- * Listens on 127.0.0.1:8788 and forwards /v1/* to integrate.api.nvidia.com.
- *
- * Point IIS rewrite to: http://127.0.0.1:8788/v1/{R:1}
- * Or run behind Tailscale only on the server (not recommended for phones).
+ * Local NVIDIA proxy for IIS (no ARR required).
+ * IIS rewrites /api/nvidia/* -> http://127.0.0.1:8788/v1/*
  */
 import http from "node:http";
 import https from "node:https";
@@ -21,7 +18,21 @@ function readBody(req) {
   });
 }
 
+function writeJson(res, status, body) {
+  const payload = JSON.stringify(body);
+  res.writeHead(status, {
+    "Content-Type": "application/json",
+    "Content-Length": Buffer.byteLength(payload),
+  });
+  res.end(payload);
+}
+
 const server = http.createServer(async (req, res) => {
+  if (req.method === "GET" && (req.url === "/health" || req.url === "/v1/health")) {
+    writeJson(res, 200, { ok: true, service: "sightread-nvidia-proxy" });
+    return;
+  }
+
   if (req.method === "OPTIONS") {
     res.writeHead(204, {
       "Access-Control-Allow-Origin": "*",
@@ -34,14 +45,13 @@ const server = http.createServer(async (req, res) => {
 
   if (req.method !== "POST" || !req.url?.startsWith("/v1/")) {
     res.writeHead(404, { "Content-Type": "text/plain" });
-    res.end("Not found");
+    res.end("Not found. POST to /v1/chat/completions");
     return;
   }
 
   const authorization = req.headers.authorization;
   if (!authorization) {
-    res.writeHead(401, { "Content-Type": "text/plain" });
-    res.end("Missing Authorization header");
+    writeJson(res, 401, { error: { message: "Missing Authorization header" } });
     return;
   }
 
@@ -59,27 +69,43 @@ const server = http.createServer(async (req, res) => {
         },
       },
       (upstreamRes) => {
-        const headers = { ...upstreamRes.headers };
-        delete headers["transfer-encoding"];
-        res.writeHead(upstreamRes.statusCode ?? 502, headers);
-        upstreamRes.pipe(res);
+        const chunks = [];
+        upstreamRes.on("data", (chunk) => chunks.push(chunk));
+        upstreamRes.on("end", () => {
+          const responseBody = Buffer.concat(chunks);
+          res.writeHead(upstreamRes.statusCode ?? 502, {
+            "Content-Type":
+              upstreamRes.headers["content-type"] ?? "application/json",
+            "Content-Length": responseBody.length,
+          });
+          res.end(responseBody);
+        });
       },
     );
 
     upstreamReq.on("error", (err) => {
-      res.writeHead(502, { "Content-Type": "text/plain" });
-      res.end(`Upstream error: ${err.message}`);
+      writeJson(res, 502, {
+        error: { message: `Upstream error: ${err.message}` },
+      });
+    });
+
+    upstreamReq.setTimeout(120_000, () => {
+      upstreamReq.destroy(new Error("Upstream timeout"));
     });
 
     upstreamReq.write(body);
     upstreamReq.end();
   } catch (err) {
-    res.writeHead(500, { "Content-Type": "text/plain" });
-    res.end(err instanceof Error ? err.message : "Proxy error");
+    writeJson(res, 500, {
+      error: {
+        message: err instanceof Error ? err.message : "Proxy error",
+      },
+    });
   }
 });
 
 server.listen(PORT, HOST, () => {
-  console.log(`NVIDIA proxy listening on http://${HOST}:${PORT}`);
-  console.log("Forward IIS /api/nvidia/* to this service if ARR is unavailable.");
+  console.log(`Sightread NVIDIA proxy: http://${HOST}:${PORT}`);
+  console.log("Health check: GET /health");
+  console.log("IIS should rewrite /api/nvidia/* to this service.");
 });

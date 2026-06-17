@@ -1,4 +1,6 @@
+import { useState } from "react";
 import { clearChatHistory } from "../lib/clearChatHistory";
+import { testNvidiaConnection } from "../lib/nvidia/request";
 import { PROMPT_PRESETS } from "../lib/promptPresets";
 import { AI_PROVIDERS } from "../lib/providers";
 import type { Settings } from "../lib/settings";
@@ -27,6 +29,32 @@ export function SettingsScreen({
   onBack,
   onHistoryCleared,
 }: SettingsScreenProps) {
+  const [nvidiaTest, setNvidiaTest] = useState<{
+    status: "idle" | "running" | "ok" | "error";
+    message: string;
+  }>({ status: "idle", message: "" });
+
+  const runNvidiaTest = () => {
+    setNvidiaTest({ status: "running", message: "Testing proxy and API key…" });
+    void testNvidiaConnection(
+      settings.nvidiaApiKey,
+      settings.nvidiaModel,
+      settings.nvidiaProxyPath,
+    )
+      .then((reply) => {
+        setNvidiaTest({
+          status: "ok",
+          message: `Connected. Model replied: “${reply.slice(0, 80)}”`,
+        });
+      })
+      .catch((err) => {
+        setNvidiaTest({
+          status: "error",
+          message: err instanceof Error ? err.message : "NVIDIA test failed.",
+        });
+      });
+  };
+
   return (
     <div className="screen settings-screen">
       <header className="screen-header">
@@ -121,10 +149,25 @@ export function SettingsScreen({
               </span>
             </label>
             <p className="footnote">
-              NVIDIA blocks direct browser calls. Sightread uses a same-origin proxy at{" "}
-              <code>/api/nvidia</code> — include <code>web.config</code> when deploying to IIS,
-              or run <code>npm run nvidia-proxy</code> on the server.
+              On the server: run <code>scripts\start-nvidia-proxy.cmd</code> (keeps a local proxy on
+              port 8788). Deploy <code>web.config</code> with the site — IIS forwards{" "}
+              <code>/api/nvidia</code> to that proxy.
             </p>
+            <button
+              type="button"
+              className="btn btn--secondary btn--compact"
+              disabled={nvidiaTest.status === "running" || !settings.nvidiaApiKey.trim()}
+              onClick={runNvidiaTest}
+            >
+              {nvidiaTest.status === "running" ? "Testing…" : "Test NVIDIA connection"}
+            </button>
+            {nvidiaTest.status !== "idle" && (
+              <p
+                className={`footnote ${nvidiaTest.status === "error" ? "chat-panel__error" : ""}`}
+              >
+                {nvidiaTest.message}
+              </p>
+            )}
           </>
         )}
 
