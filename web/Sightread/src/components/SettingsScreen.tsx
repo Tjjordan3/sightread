@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { clearChatHistory } from "../lib/clearChatHistory";
 import { PROMPT_PRESETS } from "../lib/promptPresets";
 import { AI_PROVIDERS } from "../lib/providers";
@@ -7,7 +6,7 @@ import { WAKE_PHRASE } from "../lib/voice/wakeWord";
 
 interface SettingsScreenProps {
   settings: Settings;
-  onSave: (settings: Settings) => void;
+  onUpdate: (patch: Partial<Settings>) => void;
   onBack: () => void;
   onHistoryCleared?: () => void;
 }
@@ -22,13 +21,11 @@ const KEY_FIELDS = {
 } as const;
 
 export function SettingsScreen({
-  settings: initial,
-  onSave,
+  settings,
+  onUpdate,
   onBack,
   onHistoryCleared,
 }: SettingsScreenProps) {
-  const [draft, setDraft] = useState<Settings>(initial);
-
   return (
     <div className="screen settings-screen">
       <header className="screen-header">
@@ -43,10 +40,9 @@ export function SettingsScreen({
         <label className="field">
           <span>Theme</span>
           <select
-            value={draft.theme}
+            value={settings.theme}
             onChange={(e) =>
-              setDraft({
-                ...draft,
+              onUpdate({
                 theme: e.target.value as Settings["theme"],
               })
             }
@@ -65,10 +61,8 @@ export function SettingsScreen({
           <span>Enable AI analysis</span>
           <input
             type="checkbox"
-            checked={draft.isAIEnabled}
-            onChange={(e) =>
-              setDraft({ ...draft, isAIEnabled: e.target.checked })
-            }
+            checked={settings.isAIEnabled}
+            onChange={(e) => onUpdate({ isAIEnabled: e.target.checked })}
           />
         </label>
 
@@ -76,20 +70,17 @@ export function SettingsScreen({
           <span>Read vision responses aloud</span>
           <input
             type="checkbox"
-            checked={draft.isTTSEnabled}
-            onChange={(e) =>
-              setDraft({ ...draft, isTTSEnabled: e.target.checked })
-            }
+            checked={settings.isTTSEnabled}
+            onChange={(e) => onUpdate({ isTTSEnabled: e.target.checked })}
           />
         </label>
 
         <label className="field">
           <span>Provider</span>
           <select
-            value={draft.provider}
+            value={settings.provider}
             onChange={(e) =>
-              setDraft({
-                ...draft,
+              onUpdate({
                 provider: e.target.value as Settings["provider"],
               })
             }
@@ -102,15 +93,13 @@ export function SettingsScreen({
           </select>
         </label>
 
-        {draft.provider === "openrouter" && (
+        {settings.provider === "openrouter" && (
           <label className="field">
             <span>OpenRouter model</span>
             <input
               type="text"
-              value={draft.openrouterModel}
-              onChange={(e) =>
-                setDraft({ ...draft, openrouterModel: e.target.value })
-              }
+              value={settings.openrouterModel}
+              onChange={(e) => onUpdate({ openrouterModel: e.target.value })}
               placeholder="google/gemini-2.0-flash-001"
             />
           </label>
@@ -120,29 +109,26 @@ export function SettingsScreen({
           <span>Smart prompts (recommended)</span>
           <input
             type="checkbox"
-            checked={draft.promptMode === "auto"}
+            checked={settings.promptMode === "auto"}
             onChange={(e) =>
-              setDraft({
-                ...draft,
+              onUpdate({
                 promptMode: e.target.checked ? "auto" : "manual",
               })
             }
           />
         </label>
         <p className="footnote">
-          {draft.promptMode === "auto"
+          {settings.promptMode === "auto"
             ? "Sightread picks the best vision prompt automatically — no preset to choose."
             : "Choose a fixed preset for live vision and photo analysis."}
         </p>
 
-        {draft.promptMode === "manual" && (
+        {settings.promptMode === "manual" && (
           <label className="field">
             <span>Prompt preset</span>
             <select
-              value={draft.selectedPromptId}
-              onChange={(e) =>
-                setDraft({ ...draft, selectedPromptId: e.target.value })
-              }
+              value={settings.selectedPromptId}
+              onChange={(e) => onUpdate({ selectedPromptId: e.target.value })}
             >
               {PROMPT_PRESETS.map((preset) => (
                 <option key={preset.id} value={preset.id}>
@@ -154,16 +140,15 @@ export function SettingsScreen({
         )}
 
         <label className="field">
-          <span>Analyze every {draft.analysisIntervalSec}s</span>
+          <span>Analyze every {settings.analysisIntervalSec}s</span>
           <input
             type="range"
             min={5}
             max={30}
             step={1}
-            value={draft.analysisIntervalSec}
+            value={settings.analysisIntervalSec}
             onChange={(e) =>
-              setDraft({
-                ...draft,
+              onUpdate({
                 analysisIntervalSec: Number(e.target.value),
               })
             }
@@ -175,10 +160,8 @@ export function SettingsScreen({
           <span>Speak agent replies in chat</span>
           <input
             type="checkbox"
-            checked={draft.speakChatReplies}
-            onChange={(e) =>
-              setDraft({ ...draft, speakChatReplies: e.target.checked })
-            }
+            checked={settings.speakChatReplies}
+            onChange={(e) => onUpdate({ speakChatReplies: e.target.checked })}
           />
         </label>
 
@@ -186,10 +169,8 @@ export function SettingsScreen({
           <span>Always listening (pause when tab hidden)</span>
           <input
             type="checkbox"
-            checked={draft.alwaysListening}
-            onChange={(e) =>
-              setDraft({ ...draft, alwaysListening: e.target.checked })
-            }
+            checked={settings.alwaysListening}
+            onChange={(e) => onUpdate({ alwaysListening: e.target.checked })}
           />
         </label>
 
@@ -197,24 +178,21 @@ export function SettingsScreen({
           <span>Wake phrase (“{WAKE_PHRASE}”)</span>
           <input
             type="checkbox"
-            checked={draft.wakeWordEnabled}
-            onChange={(e) =>
-              setDraft({ ...draft, wakeWordEnabled: e.target.checked })
-            }
+            checked={settings.wakeWordEnabled}
+            onChange={(e) => onUpdate({ wakeWordEnabled: e.target.checked })}
           />
         </label>
 
         <label className="field">
-          <span>Silence before send: {draft.silenceTimeoutMs}ms</span>
+          <span>Silence before send: {settings.silenceTimeoutMs}ms</span>
           <input
             type="range"
             min={600}
             max={3000}
             step={100}
-            value={draft.silenceTimeoutMs}
+            value={settings.silenceTimeoutMs}
             onChange={(e) =>
-              setDraft({
-                ...draft,
+              onUpdate({
                 silenceTimeoutMs: Number(e.target.value),
               })
             }
@@ -224,7 +202,7 @@ export function SettingsScreen({
         <h3 className="settings-section-title">API keys</h3>
         <p className="footnote">
           Keys are stored in this browser only (localStorage). Calls go directly
-          from your device to the selected provider.
+          from your device to the selected provider. Changes save automatically.
         </p>
 
         {AI_PROVIDERS.map((provider) => {
@@ -235,10 +213,8 @@ export function SettingsScreen({
               <input
                 type="password"
                 autoComplete="off"
-                value={draft[field]}
-                onChange={(e) =>
-                  setDraft({ ...draft, [field]: e.target.value })
-                }
+                value={settings[field]}
+                onChange={(e) => onUpdate({ [field]: e.target.value })}
                 placeholder={provider.keyPlaceholder}
               />
               <span className="footnote">{provider.keyHint}</span>
@@ -257,14 +233,6 @@ export function SettingsScreen({
           }
         >
           Clear all chat history
-        </button>
-
-        <button
-          type="button"
-          className="btn btn--primary"
-          onClick={() => onSave(draft)}
-        >
-          Save
         </button>
       </div>
     </div>

@@ -10,7 +10,7 @@ import { useTheme } from "./hooks/useTheme";
 import { useSettings } from "./hooks/useSettings";
 
 function App() {
-  const { settings, setSettings } = useSettings();
+  const { settings, updateSettings } = useSettings();
   useTheme(settings.theme);
   const [tab, setTab] = useState<AppTab>("chat");
   const [chatEpoch, setChatEpoch] = useState(0);
@@ -27,15 +27,9 @@ function App() {
     ) : (
       <SettingsScreen
         settings={settings}
-        onSave={(next) => {
-          setSettings(next);
-          setTab("chat");
-        }}
+        onUpdate={updateSettings}
         onBack={() => setTab("chat")}
-        onHistoryCleared={() => {
-          setChatEpoch((n) => n + 1);
-          setTab("chat");
-        }}
+        onHistoryCleared={() => setChatEpoch((n) => n + 1)}
       />
     );
 
