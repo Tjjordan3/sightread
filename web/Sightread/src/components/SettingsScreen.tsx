@@ -107,18 +107,25 @@ export function SettingsScreen({
         )}
 
         {settings.provider === "nvidia" && (
-          <label className="field">
-            <span>NVIDIA NIM model</span>
-            <input
-              type="text"
-              value={settings.nvidiaModel}
-              onChange={(e) => onUpdate({ nvidiaModel: e.target.value })}
-              placeholder="meta/llama-3.2-11b-vision-instruct"
-            />
-            <span className="footnote">
-              Vision-capable model ID from build.nvidia.com (e.g. meta/llama-3.2-11b-vision-instruct).
-            </span>
-          </label>
+          <>
+            <label className="field">
+              <span>NVIDIA NIM model</span>
+              <input
+                type="text"
+                value={settings.nvidiaModel}
+                onChange={(e) => onUpdate({ nvidiaModel: e.target.value })}
+                placeholder="meta/llama-3.2-11b-vision-instruct"
+              />
+              <span className="footnote">
+                Vision-capable model ID from build.nvidia.com.
+              </span>
+            </label>
+            <p className="footnote">
+              NVIDIA blocks direct browser calls. Sightread uses a same-origin proxy at{" "}
+              <code>/api/nvidia</code> — include <code>web.config</code> when deploying to IIS,
+              or run <code>npm run nvidia-proxy</code> on the server.
+            </p>
+          </>
         )}
 
         <label className="switch-row">

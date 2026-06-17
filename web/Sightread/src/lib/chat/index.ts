@@ -26,6 +26,10 @@ export function createChatService(settings: Settings): ChatAIService {
     case "openrouter":
       return createOpenRouterChatService(apiKey, settings.openrouterModel);
     case "nvidia":
-      return createNvidiaChatService(apiKey, settings.nvidiaModel);
+      return createNvidiaChatService(
+        apiKey,
+        settings.nvidiaModel,
+        settings.nvidiaProxyPath,
+      );
   }
 }

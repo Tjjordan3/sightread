@@ -1,22 +1,16 @@
-import { VisionAIError, type VisionAIService } from "./types";
-
-const API_URL = "https://integrate.api.nvidia.com/v1/chat/completions";
+import { nvidiaChatCompletion, readNvidiaResponse } from "../nvidia/request";
+import { type VisionAIService } from "./types";
 
 export function createNvidiaVisionService(
   apiKey: string,
   model: string,
+  proxyPath?: string,
 ): VisionAIService {
   return {
     async analyze(jpegBase64: string, prompt: string): Promise<string> {
-      if (!apiKey.trim()) throw new VisionAIError("Add API key in Settings.");
-
-      const response = await fetch(API_URL, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${apiKey}`,
-        },
-        body: JSON.stringify({
+      const response = await nvidiaChatCompletion(
+        apiKey,
+        {
           model,
           max_tokens: 300,
           messages: [
@@ -33,20 +27,10 @@ export function createNvidiaVisionService(
               ],
             },
           ],
-        }),
-      });
-
-      const data = await response.json();
-      if (!response.ok) {
-        throw new VisionAIError(
-          data?.error?.message ?? `NVIDIA API request failed (${response.status})`,
-          response.status,
-        );
-      }
-
-      const text = data?.choices?.[0]?.message?.content?.trim();
-      if (!text) throw new VisionAIError("Empty response from NVIDIA API.");
-      return text;
+        },
+        proxyPath,
+      );
+      return readNvidiaResponse(response);
     },
   };
 }

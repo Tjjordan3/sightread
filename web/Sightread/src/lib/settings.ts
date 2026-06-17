@@ -18,6 +18,7 @@ export interface Settings {
   theme: ThemeSetting;
   openrouterModel: string;
   nvidiaModel: string;
+  nvidiaProxyPath: string;
   promptMode: PromptMode;
   selectedPromptId: string;
   analysisIntervalSec: number;
@@ -43,6 +44,7 @@ const DEFAULTS: Settings = {
   theme: "auto",
   openrouterModel: "google/gemini-2.0-flash-001",
   nvidiaModel: "meta/llama-3.2-11b-vision-instruct",
+  nvidiaProxyPath: "/api/nvidia/v1/chat/completions",
   promptMode: "auto",
   selectedPromptId: "scene",
   analysisIntervalSec: 10,
