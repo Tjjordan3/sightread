@@ -8,6 +8,7 @@
     "build": "node scripts/create-icons.mjs && tsc -b && vite build",
     "lint": "eslint .",
     "nvidia-proxy": "node server/nvidia-proxy.mjs",
+    "search-proxy": "node server/search-proxy.mjs",
     "preview": "vite preview"
   },
   "dependencies": {

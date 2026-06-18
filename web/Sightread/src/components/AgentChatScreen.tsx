@@ -1,16 +1,63 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useConversationSession } from "../hooks/useConversationSession";
 import type { Settings } from "../lib/settings";
+import type { VisionDiscussHandoff } from "../lib/visionDiscuss";
 import { AgentChatView } from "./AgentChatView";
 import { ConversationList } from "./ConversationList";
 
-interface AgentChatScreenProps {
-  settings: Settings;
+export interface ComposerSeed {
+  id: number;
+  text: string;
+  blob: Blob;
 }
 
-export function AgentChatScreen({ settings }: AgentChatScreenProps) {
+interface AgentChatScreenProps {
+  settings: Settings;
+  discussHandoff?: VisionDiscussHandoff | null;
+  onDiscussHandoffConsumed?: () => void;
+}
+
+function buildDiscussSeedText(description: string): string {
+  return `Here's what Sightread vision detected:\n\n${description}\n\nWhat would you like to know about this?`;
+}
+
+export function AgentChatScreen({
+  settings,
+  discussHandoff = null,
+  onDiscussHandoffConsumed,
+}: AgentChatScreenProps) {
   const session = useConversationSession();
   const [showHistory, setShowHistory] = useState(false);
+  const [composerSeed, setComposerSeed] = useState<ComposerSeed | null>(null);
+  const [viewKey, setViewKey] = useState(0);
+
+  useEffect(() => {
+    if (!discussHandoff || !session.ready) return;
+
+    let cancelled = false;
+    void (async () => {
+      if (discussHandoff.mode === "new") {
+        await session.startNewConversation();
+      }
+      if (cancelled) return;
+      setComposerSeed({
+        id: Date.now(),
+        text: buildDiscussSeedText(discussHandoff.description),
+        blob: discussHandoff.blob,
+      });
+      setViewKey((k) => k + 1);
+      onDiscussHandoffConsumed?.();
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    discussHandoff,
+    onDiscussHandoffConsumed,
+    session.ready,
+    session.startNewConversation,
+  ]);
 
   if (!session.ready) {
     return (
@@ -50,9 +97,10 @@ export function AgentChatScreen({ settings }: AgentChatScreenProps) {
       )}
 
       <AgentChatView
-        key={session.activeConversation?.id ?? "default"}
+        key={`${session.activeConversation?.id ?? "default"}-${viewKey}`}
         settings={settings}
         initialMessages={session.initialMessages}
+        composerSeed={composerSeed}
         onUserMessage={session.persistUserMessage}
         onAssistantMessage={session.persistAssistantMessage}
         onOpenHistory={() => setShowHistory(true)}

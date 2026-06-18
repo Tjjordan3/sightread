@@ -10,6 +10,11 @@ export default defineConfig({
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api\/nvidia/, ""),
       },
+      "/api/search": {
+        target: "http://127.0.0.1:8789",
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/search/, "/search"),
+      },
     },
   },
   plugins: [

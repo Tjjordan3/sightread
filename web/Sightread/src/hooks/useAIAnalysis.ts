@@ -37,6 +37,7 @@ export function useAIAnalysis(settings: Settings) {
   const abortRef = useRef<AbortController | null>(null);
   const lastSpokenRef = useRef("");
   const latestResponseRef = useRef("");
+  const lastFrameBlobRef = useRef<Blob | null>(null);
 
   const speakVisionResult = useCallback(
     async (result: string, manual: boolean) => {
@@ -68,6 +69,7 @@ export function useAIAnalysis(settings: Settings) {
     backoffMs.current = 0;
     isProcessing.current = false;
     didShowMissingKeyError.current = false;
+    lastFrameBlobRef.current = null;
     stopSpeaking();
     setState(INITIAL_STATE);
   }, []);
@@ -91,6 +93,7 @@ export function useAIAnalysis(settings: Settings) {
           maxWidth: manual ? 768 : 512,
           quality: manual ? 0.75 : 0.6,
         });
+        lastFrameBlobRef.current = blob;
         const base64 = await blobToBase64(blob);
         const service = createVisionService(settings);
         const visionPrompt = getVisionPrompt(settings);
@@ -176,7 +179,14 @@ export function useAIAnalysis(settings: Settings) {
     [runAnalysis],
   );
 
-  return { state, processFrame, analyzeNow, replayLatest, reset };
+  const getDiscussSnapshot = useCallback(() => {
+    const description = latestResponseRef.current.trim();
+    const blob = lastFrameBlobRef.current;
+    if (!description || !blob) return null;
+    return { description, blob };
+  }, []);
+
+  return { state, processFrame, analyzeNow, replayLatest, getDiscussSnapshot, reset };
 }
 
 function isRateLimitError(message: string): boolean {

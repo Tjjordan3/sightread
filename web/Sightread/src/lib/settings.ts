@@ -35,6 +35,7 @@ export interface Settings {
   mistralApiKey: string;
   openrouterApiKey: string;
   nvidiaApiKey: string;
+  webSearchEnabled: boolean;
 }
 
 const STORAGE_KEY = "sightread_settings";
@@ -61,6 +62,7 @@ const DEFAULTS: Settings = {
   mistralApiKey: "",
   openrouterApiKey: "",
   nvidiaApiKey: "",
+  webSearchEnabled: false,
 };
 
 const VALID_PROVIDERS = new Set<string>([

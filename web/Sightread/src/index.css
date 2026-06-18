@@ -412,6 +412,58 @@ select {
   outline-offset: 2px;
 }
 
+.ai-panel__actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
+
+.vision-discuss {
+  position: relative;
+}
+
+.vision-discuss__menu {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  right: 0;
+  min-width: 180px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: var(--shadow-drawer);
+  overflow: hidden;
+  z-index: 5;
+}
+
+.vision-discuss__item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 10px 12px;
+  border: none;
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+
+.vision-discuss__item:hover {
+  background: var(--bg-muted);
+}
+
+.chat-bubble__citations {
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.78rem;
+}
+
+.chat-bubble__citations a {
+  color: var(--text-primary);
+  word-break: break-word;
+}
+
 .ai-panel__meta {
   margin: 8px 0 0;
   font-size: 0.75rem;

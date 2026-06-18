@@ -1,11 +1,11 @@
 import { nvidiaChatCompletion, readNvidiaResponse } from "../nvidia/request";
-import { buildTranscript, type ChatAIService, type ChatMessage } from "./types";
+import { buildTranscript, type ChatMessage } from "./types";
 
 export function createNvidiaChatService(
   apiKey: string,
   model: string,
   proxyPath?: string,
-): ChatAIService {
+) {
   return {
     async chat(messages: ChatMessage[], attachedImageBase64?: string): Promise<string> {
       const content: Array<Record<string, unknown>> = [

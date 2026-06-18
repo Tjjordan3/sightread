@@ -57,22 +57,35 @@ export function useAgentChat({
     });
   }, []);
 
+  const attachFromBlob = useCallback(
+    (blob: Blob) => {
+      clearAttachment();
+      setPendingAttachment({
+        previewUrl: URL.createObjectURL(blob),
+        blob,
+      });
+      setAttachLiveFrame(false);
+      setError("");
+    },
+    [clearAttachment],
+  );
+
+  const seedComposer = useCallback((text: string, blob?: Blob) => {
+    setInput(text);
+    if (blob) attachFromBlob(blob);
+    setError("");
+  }, [attachFromBlob]);
+
   const attachFile = useCallback(
     async (file: File) => {
       try {
         const blob = await fileToJpegBlob(file, { maxWidth: 768, quality: 0.75 });
-        clearAttachment();
-        setPendingAttachment({
-          previewUrl: URL.createObjectURL(blob),
-          blob,
-        });
-        setAttachLiveFrame(false);
-        setError("");
+        attachFromBlob(blob);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Could not attach image.");
       }
     },
-    [clearAttachment],
+    [attachFromBlob],
   );
 
   const sendMessage = useCallback(
@@ -133,14 +146,15 @@ export function useAgentChat({
         const assistantMessage: ChatMessage = {
           id: createId(),
           role: "assistant",
-          text: reply,
+          text: reply.text,
+          citations: reply.citations,
         };
         setMessages((prev) => [...prev, assistantMessage]);
         await onAssistantMessage?.(assistantMessage);
 
         if (settings.speakChatReplies || voiceConversationRef.current) {
           onBeforeSpeak?.();
-          await speakAsync(reply);
+          await speakAsync(reply.text);
           onAfterSpeak?.();
         }
         if (voiceConversationRef.current) {
@@ -203,6 +217,8 @@ export function useAgentChat({
     setError,
     voiceConversation,
     attachFile,
+    attachFromBlob,
+    seedComposer,
     clearAttachment,
     sendMessage,
     startVoiceConversation,

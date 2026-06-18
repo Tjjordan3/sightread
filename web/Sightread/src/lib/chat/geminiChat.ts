@@ -1,9 +1,9 @@
-import { buildTranscript, type ChatAIService, type ChatMessage } from "./types";
+import { buildTranscript, type ChatMessage } from "./types";
 import { VisionAIError } from "../vision/types";
 
 const MODEL = "gemini-2.0-flash";
 
-export function createGeminiChatService(apiKey: string): ChatAIService {
+export function createGeminiChatService(apiKey: string) {
   return {
     async chat(messages: ChatMessage[], attachedImageBase64?: string): Promise<string> {
       if (!apiKey.trim()) throw new VisionAIError("Add API key in Settings.");

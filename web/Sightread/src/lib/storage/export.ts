@@ -160,6 +160,7 @@ export async function storedMessagesToChatMessages(
       text: msg.text,
       imagePreviewUrl,
       attachedImageBytes,
+      citations: msg.citations,
     });
   }
   return result;

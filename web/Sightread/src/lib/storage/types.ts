@@ -19,6 +19,7 @@ export interface StoredMessage {
   text: string;
   createdAt: number;
   imageId?: string;
+  citations?: Array<{ title: string; url: string; snippet?: string }>;
 }
 
 export interface StoredImage {

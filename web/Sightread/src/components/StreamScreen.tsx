@@ -5,24 +5,28 @@ import { blobToBase64, captureFrameAsJpeg } from "../lib/imageEncoding";
 import { getVisionPrompt, type Settings } from "../lib/settings";
 import { speakAsync, unlockSpeech } from "../lib/speech";
 import { createVisionService } from "../lib/vision";
+import type { VisionDiscussHandoff, VisionDiscussMode } from "../lib/visionDiscuss";
 import { AIResponsePanel } from "./AIResponsePanel";
 import { ChatPanel } from "./ChatPanel";
 
 interface StreamScreenProps {
   settings: Settings;
   onOpenSettings: () => void;
+  onDiscussInAgent: (handoff: VisionDiscussHandoff) => void;
 }
 
 export function StreamScreen({
   settings,
   onOpenSettings,
+  onDiscussInAgent,
 }: StreamScreenProps) {
   const { videoRef, status, error, start, stop } = useWebcam();
-  const { state, processFrame, analyzeNow, replayLatest, reset } =
+  const { state, processFrame, analyzeNow, replayLatest, getDiscussSnapshot, reset } =
     useAIAnalysis(settings);
   const [showChat, setShowChat] = useState(false);
   const [uploadError, setUploadError] = useState("");
   const [uploadResult, setUploadResult] = useState<string | null>(null);
+  const uploadBlobRef = useRef<Blob | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const rafRef = useRef<number>(0);
 
@@ -72,6 +76,7 @@ export function StreamScreen({
         maxWidth: 768,
         quality: 0.75,
       });
+      uploadBlobRef.current = blob;
       URL.revokeObjectURL(url);
       const base64 = await blobToBase64(blob);
       const service = createVisionService(settings);
@@ -86,6 +91,18 @@ export function StreamScreen({
         err instanceof Error ? err.message : "Image analysis failed.",
       );
     }
+  };
+
+  const handleDiscuss = (mode: VisionDiscussMode) => {
+    const snapshot = getDiscussSnapshot();
+    const description = uploadResult ?? snapshot?.description ?? "";
+    const blob = uploadBlobRef.current ?? snapshot?.blob;
+    if (!description.trim() || !blob) return;
+    onDiscussInAgent({
+      description,
+      blob,
+      mode,
+    });
   };
 
   const displayState =
@@ -159,7 +176,9 @@ export function StreamScreen({
             aiState={displayState}
             promptTitle={getVisionPrompt(settings).title}
             ttsEnabled={settings.isTTSEnabled}
+            canDiscuss={displayState.latestResponse.length > 0}
             onReadAloud={settings.isTTSEnabled ? handleReadAloud : undefined}
+            onDiscuss={handleDiscuss}
           />
         )}
 

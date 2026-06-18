@@ -157,6 +157,7 @@ export function useConversationSession() {
         role: "assistant",
         text: message.text,
         createdAt: Date.now(),
+        citations: message.citations,
       });
       const list = await refreshList();
       setConversations(list);

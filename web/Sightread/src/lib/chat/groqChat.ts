@@ -1,9 +1,9 @@
-import { buildTranscript, type ChatAIService, type ChatMessage } from "./types";
+import { buildTranscript, type ChatMessage } from "./types";
 import { VisionAIError } from "../vision/types";
 
 const MODEL = "meta-llama/llama-4-scout-17b-16e-instruct";
 
-export function createGroqChatService(apiKey: string): ChatAIService {
+export function createGroqChatService(apiKey: string) {
   return {
     async chat(messages: ChatMessage[], attachedImageBase64?: string): Promise<string> {
       if (!apiKey.trim()) throw new VisionAIError("Add API key in Settings.");

@@ -6,6 +6,7 @@ import type { ChatMessage } from "../lib/chat";
 import type { Settings } from "../lib/settings";
 import { warmUpSpeech } from "../lib/speech";
 import { WAKE_PHRASE } from "../lib/voice/wakeWord";
+import type { ComposerSeed } from "./AgentChatScreen";
 import { ChatComposer } from "./ChatComposer";
 import { ChatMessageList } from "./ChatMessageList";
 
@@ -17,6 +18,8 @@ export interface AgentChatViewProps {
   onClose?: () => void;
   onUserMessage?: (message: ChatMessage, imageBlob?: Blob) => void | Promise<void>;
   onAssistantMessage?: (message: ChatMessage) => void | Promise<void>;
+  /** Auto-seed composer when opening from Vision Discuss. */
+  composerSeed?: ComposerSeed | null;
   onOpenHistory?: () => void;
   title?: string;
   className?: string;
@@ -33,6 +36,7 @@ export function AgentChatView({
   onUserMessage,
   onAssistantMessage,
   onOpenHistory,
+  composerSeed = null,
   title = "Sightread Agent",
   className = "",
   passiveListening = false,
@@ -59,13 +63,6 @@ export function AgentChatView({
     onFinalTranscript: (text) => voiceHandlersRef.current.onFinal(text),
   });
 
-  useEffect(() => {
-    startListeningRef.current = (continuous = false) => speech.start(continuous);
-    stopListeningRef.current = () => speech.stop();
-    pauseListeningRef.current = () => speech.pause();
-    resumeListeningRef.current = () => speech.resume();
-  }, [speech]);
-
   const chat = useAgentChat({
     settings,
     getCurrentFrame,
@@ -88,6 +85,18 @@ export function AgentChatView({
       }, 800);
     },
   });
+
+  useEffect(() => {
+    startListeningRef.current = (continuous = false) => speech.start(continuous);
+    stopListeningRef.current = () => speech.stop();
+    pauseListeningRef.current = () => speech.pause();
+    resumeListeningRef.current = () => speech.resume();
+  }, [speech]);
+
+  useEffect(() => {
+    if (!composerSeed) return;
+    chat.seedComposer(composerSeed.text, composerSeed.blob);
+  }, [composerSeed]);
 
   const voice = useVoiceSession({
     settings,

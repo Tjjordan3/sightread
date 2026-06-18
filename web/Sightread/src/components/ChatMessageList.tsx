@@ -35,6 +35,17 @@ export function ChatMessageList({
             />
           )}
           <p>{msg.text}</p>
+          {msg.citations && msg.citations.length > 0 && (
+            <ul className="chat-bubble__citations">
+              {msg.citations.map((cite) => (
+                <li key={cite.url}>
+                  <a href={cite.url} target="_blank" rel="noopener noreferrer">
+                    {cite.title || cite.url}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
       ))}
       {isSending && <p className="chat-panel__thinking">Thinking…</p>}
