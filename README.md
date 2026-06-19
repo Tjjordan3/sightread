@@ -61,4 +61,7 @@ Sightread does **not** require AI keys at build time. Add keys in-app:
 
 ## License
 
-Derived from Meta''s CameraAccess sample (see `ios/Sightread/`). AI integration and Sightread branding are project additions.
+Sightread is licensed under the [MIT License](LICENSE).
+
+Portions of the mobile apps are derived from Meta's CameraAccess sample; see
+[NOTICE](NOTICE) for attribution and Meta Wearables DAT SDK terms.

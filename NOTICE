@@ -1,0 +1,27 @@
+Sightread
+=========
+
+This project includes portions derived from Meta Platforms, Inc. and affiliates'
+CameraAccess sample application for the Meta Wearables Device Access Toolkit
+(DAT SDK). Those portions retain Meta's copyright notices in the source files.
+
+Meta Wearables DAT SDK
+----------------------
+
+Use of the Meta Wearables Device Access Toolkit is subject to Meta's developer
+terms, including the Meta Wearables Developer Terms and Acceptable Use Policy:
+
+- https://wearables.developer.meta.com/terms
+- https://wearables.developer.meta.com/acceptable-use-policy
+
+The DAT SDK itself is not licensed under MIT. See the official repositories:
+
+- https://github.com/facebook/meta-wearables-dat-ios
+- https://github.com/facebook/meta-wearables-dat-android
+
+Third-party dependencies
+------------------------
+
+This project depends on open-source libraries distributed under their own
+licenses. See each platform's package manifest (npm, Swift Package Manager,
+Gradle) for dependency details.
