@@ -1,0 +1,10 @@
+name = "sightread"
+compatibility_date = "2024-09-23"
+pages_build_output_dir = "dist"
+
+# SERPER_API_KEY is required for /api/search web search.
+# Set it as a secret (never commit the value):
+#   npx wrangler pages secret put SERPER_API_KEY --project-name=sightread
+#
+# NVIDIA requests are proxied with the user's own API key in the Authorization header;
+# no server-side NVIDIA secret is needed.

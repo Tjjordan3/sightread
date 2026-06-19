@@ -55,6 +55,16 @@ npm run preview
 
 Deploy `dist/` to any static HTTPS host.
 
+### Cloudflare Pages (recommended)
+
+Includes Pages Functions for `/api/nvidia` and `/api/search` — no IIS or Node process required.
+
+See **[CLOUDFLARE_DEPLOY.md](./CLOUDFLARE_DEPLOY.md)** for setup, secrets, and deploy steps.
+
+```bash
+npm run pages:deploy
+```
+
 ### NVIDIA NIM on IIS (CORS proxy required)
 
 NVIDIA's API does **not** allow direct browser calls (no CORS). Sightread routes NVIDIA requests through `/api/nvidia/v1/...` on your server.
