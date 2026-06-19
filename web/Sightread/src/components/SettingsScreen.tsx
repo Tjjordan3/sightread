@@ -227,19 +227,13 @@ export function SettingsScreen({
 
         <h3 className="settings-section-title">Agent & voice</h3>
         <label className="switch-row">
-          <span>Web search (Serper)</span>
+          <span>Web Search</span>
           <input
             type="checkbox"
             checked={settings.webSearchEnabled}
             onChange={(e) => onUpdate({ webSearchEnabled: e.target.checked })}
           />
         </label>
-        <p className="footnote">
-          Searches the web via Serper when the agent needs current info. Requires{" "}
-          <code>SERPER_API_KEY</code> on the server and{" "}
-          <code>scripts\start-search-proxy.cmd</code>. Works with OpenAI, Groq,
-          OpenRouter, and NVIDIA providers.
-        </p>
 
         <label className="switch-row">
           <span>Speak agent replies in chat</span>
