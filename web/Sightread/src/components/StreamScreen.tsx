@@ -139,7 +139,7 @@ export function StreamScreen({
 
       <div className="stream-screen__chrome">
         <div className="stream-screen__top">
-          <span className="stream-screen__label">Webcam · best-effort 720p</span>
+          <span className="stream-screen__label">Vision View</span>
           <div className="stream-screen__actions">
             <button
               type="button"
