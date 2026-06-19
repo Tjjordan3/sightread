@@ -1,69 +1,85 @@
+/**
+ * Cloudflare Pages Function: Tavily search proxy
+ * Replaces Serper for production. Handles: POST /api/search
+ *
+ * Add in Cloudflare Dashboard → Settings → Environment variables:
+ *   TAVILY_API_KEY = your key from app.tavily.com  (mark as Secret)
+ */
+
 interface Env {
-  SERPER_API_KEY?: string;
+  TAVILY_API_KEY: string;
 }
 
-interface SerperOrganic {
-  title?: string;
-  link?: string;
-  snippet?: string;
-}
+export const onRequest: PagesFunction<Env> = async (context) => {
+  const { request, env } = context;
 
-interface SerperResponse {
-  organic?: SerperOrganic[];
-}
+  if (request.method === "OPTIONS") {
+    return new Response(null, {
+      status: 204,
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "POST, OPTIONS",
+        "Access-Control-Allow-Headers": "content-type",
+      },
+    });
+  }
 
-export const onRequestGet: PagesFunction<Env> = async (context) => {
-  const key = context.env.SERPER_API_KEY ?? "";
-  return Response.json({
-    ok: true,
-    service: "sightread-search-proxy",
-    configured: key.length > 0,
-  });
-};
+  if (request.method === "GET") {
+    return Response.json({
+      ok: true,
+      service: "sightread-search-proxy",
+      configured: !!env.TAVILY_API_KEY,
+    });
+  }
 
-export const onRequestPost: PagesFunction<Env> = async (context) => {
-  const serperKey = context.env.SERPER_API_KEY ?? "";
-  if (!serperKey) {
+  if (request.method !== "POST") {
+    return new Response("POST /api/search", { status: 405 });
+  }
+
+  if (!env.TAVILY_API_KEY) {
     return Response.json(
-      { error: "SERPER_API_KEY is not set on the server." },
-      { status: 503 },
+      { error: "TAVILY_API_KEY is not configured on the server." },
+      { status: 503 }
     );
   }
 
+  let body: unknown;
   try {
-    const payload = (await context.request.json()) as { query?: string };
-    const query = payload.query?.trim();
-    if (!query) {
-      return Response.json({ error: "Missing query" }, { status: 400 });
-    }
-
-    const serperResponse = await fetch("https://google.serper.dev/search", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-API-KEY": serperKey,
-      },
-      body: JSON.stringify({ q: query, num: 5 }),
-    });
-
-    if (!serperResponse.ok) {
-      const text = await serperResponse.text();
-      return Response.json(
-        { error: text || `Serper error (${serperResponse.status})` },
-        { status: 502 },
-      );
-    }
-
-    const data = (await serperResponse.json()) as SerperResponse;
-    const results = (data.organic ?? []).slice(0, 5).map((item) => ({
-      title: item.title ?? "",
-      url: item.link ?? "",
-      snippet: item.snippet ?? "",
-    }));
-
-    return Response.json({ query, results });
-  } catch (err) {
-    const message = err instanceof Error ? err.message : "Search failed";
-    return Response.json({ error: message }, { status: 502 });
+    body = await request.json();
+  } catch {
+    return Response.json({ error: "Invalid JSON body" }, { status: 400 });
   }
+
+  const { query } = body as { query?: string };
+  if (!query || typeof query !== "string" || !query.trim()) {
+    return Response.json({ error: "Missing query" }, { status: 400 });
+  }
+
+  const tavilyResponse = await fetch("https://api.tavily.com/search", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${env.TAVILY_API_KEY}`,
+    },
+    body: JSON.stringify({
+      query: query.trim(),
+      max_results: 5,
+      search_depth: "basic",
+    }),
+  });
+
+  const data = await tavilyResponse.json() as {
+    results?: { title: string; url: string; content: string }[];
+  };
+
+  const results = (data.results ?? []).slice(0, 5).map((item) => ({
+    title: item.title ?? "",
+    url: item.url ?? "",
+    snippet: item.content ?? "",
+  }));
+
+  return Response.json(
+    { query: query.trim(), results },
+    { headers: { "Access-Control-Allow-Origin": "*" } }
+  );
 };
