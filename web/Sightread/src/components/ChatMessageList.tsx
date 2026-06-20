@@ -25,6 +25,24 @@ export function ChatMessageList({
     </span>
   );
 
+  const renderTypingIndicator = (label: string) => (
+    <div className="chat-message chat-message--assistant">
+      {renderAvatar("assistant")}
+      <div
+        className="chat-bubble chat-bubble--assistant chat-bubble--typing"
+        role="status"
+        aria-live="polite"
+        aria-label={label}
+      >
+        <span className="typing-indicator" aria-hidden>
+          <span className="typing-indicator__dot" />
+          <span className="typing-indicator__dot" />
+          <span className="typing-indicator__dot" />
+        </span>
+      </div>
+    </div>
+  );
+
   return (
     <div className="chat-message-list" ref={listRef}>
       {showWelcomeOnly && emptyHint && (
@@ -57,21 +75,10 @@ export function ChatMessageList({
           {msg.role === "user" && renderAvatar(msg.role)}
         </div>
       ))}
-      {isSending && webSearchEnabled && (
-        <div className="chat-message chat-message--assistant">
-          {renderAvatar("assistant")}
-          <div
-            className="chat-bubble chat-bubble--assistant chat-bubble--searching"
-            role="status"
-            aria-live="polite"
-          >
-            <p>Searching the web…</p>
-          </div>
-        </div>
-      )}
-      {isSending && !webSearchEnabled && (
-        <p className="chat-panel__thinking">Thinking…</p>
-      )}
+      {isSending &&
+        renderTypingIndicator(
+          webSearchEnabled ? "Searching the web" : "Thinking",
+        )}
     </div>
   );
 }
