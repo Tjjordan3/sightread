@@ -379,6 +379,23 @@ select {
   border: 1px solid var(--border);
 }
 
+.ai-panel--frosted {
+  border-radius: 16px;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.95);
+}
+
+.ai-panel--frosted .ai-panel__meta {
+  color: rgba(255, 255, 255, 0.62);
+}
+
+.ai-panel--frosted .ai-panel__status {
+  color: rgba(255, 255, 255, 0.85);
+}
+
 .ai-panel__header {
   display: flex;
   justify-content: space-between;
@@ -403,6 +420,11 @@ select {
   -webkit-line-clamp: 6;
   -webkit-box-orient: vertical;
   overflow: hidden;
+}
+
+.ai-panel--frosted .ai-panel__text {
+  font-size: calc(0.9rem - 1px);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.55);
 }
 
 .ai-panel--speakable {

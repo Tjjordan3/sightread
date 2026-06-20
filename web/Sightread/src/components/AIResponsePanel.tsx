@@ -23,7 +23,7 @@ export function AIResponsePanel({
     ttsEnabled && aiState.latestResponse && onReadAloud != null;
 
   return (
-    <section className="ai-panel" aria-live="polite">
+    <section className="ai-panel ai-panel--frosted" aria-live="polite">
       <div className="ai-panel__header">
         <strong>Sightread AI</strong>
         <span className="ai-panel__status">
