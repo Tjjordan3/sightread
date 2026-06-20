@@ -31,6 +31,7 @@ const WEB_SEARCH_TOOL = {
         query: { type: "string", description: "Search query" },
       },
       required: ["query"],
+      additionalProperties: false,
     },
   },
 };
@@ -127,49 +128,59 @@ async function runToolAgentChat(
     const choice = data?.choices?.[0]?.message;
     if (!choice) throw new VisionAIError("Empty response from model.");
 
-    const toolCalls = choice.tool_calls as
-      | Array<{
-          id: string;
-          function: { name: string; arguments: string };
-        }>
-      | undefined;
+    try {
+      const toolCalls = choice.tool_calls as
+        | Array<{
+            id: string;
+            function: { name: string; arguments: string };
+          }>
+        | undefined;
 
-    if (toolCalls?.length) {
-      apiMessages.push({
-        role: "assistant",
-        content: choice.content ?? "",
-        tool_calls: toolCalls,
-      });
-
-      for (const call of toolCalls) {
-        if (call.function.name !== "web_search") continue;
-        let query = "";
-        try {
-          const args = JSON.parse(call.function.arguments) as { query?: string };
-          query = args.query?.trim() ?? "";
-        } catch {
-          query = "";
-        }
-
-        let toolContent = "Invalid search query.";
-        if (query) {
-          try {
-            const results = await webSearch(query);
-            allCitations.push(...results);
-            toolContent = formatSearchResultsForTool(results);
-          } catch (err) {
-            toolContent =
-              err instanceof Error ? err.message : "Search failed.";
-          }
-        }
-
+      if (toolCalls?.length) {
         apiMessages.push({
-          role: "tool",
-          tool_call_id: call.id,
-          content: toolContent,
+          role: "assistant",
+          content: choice.content ?? "",
+          tool_calls: toolCalls,
         });
+
+        for (const call of toolCalls) {
+          if (call.function.name !== "web_search") continue;
+          let query = "";
+          try {
+            const args = JSON.parse(call.function.arguments) as {
+              query?: string;
+            };
+            query = args.query?.trim() ?? "";
+          } catch {
+            query = "";
+          }
+
+          let toolContent = "Invalid search query.";
+          if (query) {
+            try {
+              const results = await webSearch(query);
+              allCitations.push(...results);
+              toolContent = formatSearchResultsForTool(results);
+            } catch (err) {
+              toolContent =
+                err instanceof Error ? err.message : "Search failed.";
+            }
+          }
+
+          apiMessages.push({
+            role: "tool",
+            tool_call_id: call.id,
+            content: toolContent,
+          });
+        }
+        continue;
       }
-      continue;
+    } catch (err) {
+      throw new VisionAIError(
+        err instanceof VisionAIError
+          ? err.message
+          : "Could not parse web search tool response from the model.",
+      );
     }
 
     const text = (choice.content as string | undefined)?.trim();
