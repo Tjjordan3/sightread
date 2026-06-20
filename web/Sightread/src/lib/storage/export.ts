@@ -72,6 +72,14 @@ export async function exportConversationMarkdown(
   for (const msg of payload.messages) {
     const speaker = msg.role === "user" ? "You" : "Sightread";
     lines.push(`## ${speaker}`, "", msg.text, "");
+    if (msg.citations && msg.citations.length > 0) {
+      lines.push("**Sources**", "");
+      for (const cite of msg.citations) {
+        const label = cite.title || cite.url;
+        lines.push(`- [${label}](${cite.url})`);
+      }
+      lines.push("");
+    }
     if (msg.imageBase64) {
       lines.push(`![attachment](data:image/jpeg;base64,${msg.imageBase64})`, "");
     }

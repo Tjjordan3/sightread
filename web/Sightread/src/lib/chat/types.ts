@@ -1,10 +1,8 @@
 export type ChatRole = "user" | "assistant";
 
-export interface ChatCitation {
-  title: string;
-  url: string;
-  snippet?: string;
-}
+/** Same shape as search API results — shared with SourceLinks and vision. */
+export type { SearchCitation as ChatCitation } from "../search/tavilyClient";
+import type { SearchCitation as ChatCitation } from "../search/tavilyClient";
 
 export interface ChatMessage {
   id: string;

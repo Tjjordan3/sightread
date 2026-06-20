@@ -3,7 +3,7 @@ import { VisionAIError } from "../vision/types";
 export interface SearchCitation {
   title: string;
   url: string;
-  snippet: string;
+  snippet?: string;
 }
 
 const SEARCH_URL = "/api/search";

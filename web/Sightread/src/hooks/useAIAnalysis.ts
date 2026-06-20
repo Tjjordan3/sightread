@@ -1,5 +1,6 @@
 import { useCallback, useRef, useState } from "react";
 import { blobToBase64, captureFrameAsJpeg } from "../lib/imageEncoding";
+import { webSearch, type SearchCitation } from "../lib/search/tavilyClient";
 import { getVisionPrompt, hasApiKeyForProvider, type Settings } from "../lib/settings";
 import { isSpeechUnlocked, speakAsync, stopSpeaking } from "../lib/speech";
 import { createVisionService } from "../lib/vision";
@@ -10,6 +11,7 @@ export interface AIResponseEntry {
   text: string;
   promptTitle: string;
   timestampMs: number;
+  citations?: SearchCitation[];
 }
 
 export interface AIUiState {
@@ -18,6 +20,9 @@ export interface AIUiState {
   errorMessage: string;
   responses: AIResponseEntry[];
   ttsNeedsTap: boolean;
+  latestCitations: SearchCitation[];
+  sourcesLoading: boolean;
+  sourcesError: string;
 }
 
 const INITIAL_STATE: AIUiState = {
@@ -26,7 +31,18 @@ const INITIAL_STATE: AIUiState = {
   errorMessage: "",
   responses: [],
   ttsNeedsTap: false,
+  latestCitations: [],
+  sourcesLoading: false,
+  sourcesError: "",
 };
+
+function buildSearchQueryFromVision(text: string): string {
+  const trimmed = text.trim();
+  if (trimmed.length <= 120) return trimmed;
+  const sentence = trimmed.match(/^[^.!?]+[.!?]?/)?.[0]?.trim();
+  if (sentence && sentence.length >= 20) return sentence.slice(0, 120);
+  return trimmed.slice(0, 120);
+}
 
 export function useAIAnalysis(settings: Settings) {
   const [state, setState] = useState<AIUiState>(INITIAL_STATE);
@@ -86,6 +102,8 @@ export function useAIAnalysis(settings: Settings) {
         ...prev,
         analysisState: "running",
         errorMessage: "",
+        latestCitations: [],
+        sourcesError: "",
       }));
 
       try {
@@ -107,6 +125,9 @@ export function useAIAnalysis(settings: Settings) {
           latestResponse: result,
           errorMessage: "",
           ttsNeedsTap: false,
+          latestCitations: [],
+          sourcesLoading: false,
+          sourcesError: "",
           responses: [
             { text: result, promptTitle: title, timestampMs: Date.now() },
             ...prev.responses,
@@ -139,6 +160,40 @@ export function useAIAnalysis(settings: Settings) {
     },
     [settings, speakVisionResult],
   );
+
+  const findSources = useCallback(async () => {
+    const query = buildSearchQueryFromVision(latestResponseRef.current);
+    if (!settings.webSearchEnabled) return;
+    if (!query) return;
+
+    setState((prev) => ({
+      ...prev,
+      sourcesLoading: true,
+      sourcesError: "",
+    }));
+
+    try {
+      const results = await webSearch(query);
+      setState((prev) => ({
+        ...prev,
+        sourcesLoading: false,
+        latestCitations: results,
+        responses:
+          prev.responses.length > 0
+            ? [
+                { ...prev.responses[0], citations: results },
+                ...prev.responses.slice(1),
+              ]
+            : prev.responses,
+      }));
+    } catch (err) {
+      setState((prev) => ({
+        ...prev,
+        sourcesLoading: false,
+        sourcesError: err instanceof Error ? err.message : "Search failed.",
+      }));
+    }
+  }, [settings.webSearchEnabled]);
 
   const processFrame = useCallback(
     (video: HTMLVideoElement | null) => {
@@ -187,7 +242,15 @@ export function useAIAnalysis(settings: Settings) {
     return { description, blob };
   }, []);
 
-  return { state, processFrame, analyzeNow, replayLatest, getDiscussSnapshot, reset };
+  return {
+    state,
+    processFrame,
+    analyzeNow,
+    replayLatest,
+    findSources,
+    getDiscussSnapshot,
+    reset,
+  };
 }
 
 function isRateLimitError(message: string): boolean {

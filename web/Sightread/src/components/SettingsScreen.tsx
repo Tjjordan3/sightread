@@ -176,6 +176,9 @@ export function SettingsScreen({
             onChange={(e) => onUpdate({ webSearchEnabled: e.target.checked })}
           />
         </label>
+        <p className="footnote">
+          Agent chat and Vision <strong>Find sources</strong> use web search when enabled.
+        </p>
 
         <h3 className="settings-section-title">API keys</h3>
         <p className="footnote">

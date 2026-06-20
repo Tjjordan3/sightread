@@ -21,7 +21,7 @@ export function StreamScreen({
   onDiscussInAgent,
 }: StreamScreenProps) {
   const { videoRef, status, error, start, stop } = useWebcam();
-  const { state, processFrame, analyzeNow, replayLatest, getDiscussSnapshot, reset } =
+  const { state, processFrame, analyzeNow, replayLatest, findSources, getDiscussSnapshot, reset } =
     useAIAnalysis(settings);
   const [showChat, setShowChat] = useState(false);
   const [uploadError, setUploadError] = useState("");
@@ -177,8 +177,13 @@ export function StreamScreen({
             promptTitle={getVisionPrompt(settings).title}
             ttsEnabled={settings.isTTSEnabled}
             manualOnly={settings.visionManualOnly}
+            webSearchEnabled={settings.webSearchEnabled}
+            citations={displayState.latestCitations}
+            sourcesLoading={displayState.sourcesLoading}
+            sourcesError={displayState.sourcesError}
             canDiscuss={displayState.latestResponse.length > 0}
             onReadAloud={settings.isTTSEnabled ? handleReadAloud : undefined}
+            onFindSources={() => void findSources()}
             onDiscuss={handleDiscuss}
           />
         )}

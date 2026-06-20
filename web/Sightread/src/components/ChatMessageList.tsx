@@ -1,5 +1,6 @@
 import type { RefObject } from "react";
 import type { ChatMessage } from "../lib/chat";
+import { SourceLinks } from "./SourceLinks";
 
 interface ChatMessageListProps {
   messages: ChatMessage[];
@@ -61,15 +62,7 @@ export function ChatMessageList({
             )}
             <p>{msg.text}</p>
             {msg.citations && msg.citations.length > 0 && (
-              <ul className="chat-bubble__citations">
-                {msg.citations.map((cite) => (
-                  <li key={cite.url}>
-                    <a href={cite.url} target="_blank" rel="noopener noreferrer">
-                      {cite.title || cite.url}
-                    </a>
-                  </li>
-                ))}
-              </ul>
+              <SourceLinks sources={msg.citations} variant="chat" />
             )}
           </div>
           {msg.role === "user" && renderAvatar(msg.role)}
