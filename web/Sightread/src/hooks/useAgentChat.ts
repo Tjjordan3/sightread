@@ -27,6 +27,21 @@ export const WELCOME_MESSAGE: ChatMessage = {
   text: "Hi — I'm your Sightread agent. Ask me anything, send a photo, or use voice to chat.",
 };
 
+function formatChatError(err: unknown, webSearchEnabled: boolean): string {
+  const message = err instanceof Error ? err.message : "Chat failed.";
+  const lower = message.toLowerCase();
+
+  if (webSearchEnabled && message.includes("400")) {
+    return "Web search doesn't work with image attachments — remove the image or disable web search in Settings.";
+  }
+
+  if (message.includes("401") || lower.includes("invalid api key")) {
+    return "Your API key was rejected — check Settings.";
+  }
+
+  return message;
+}
+
 export function useAgentChat({
   settings,
   getCurrentFrame,
@@ -161,7 +176,7 @@ export function useAgentChat({
           onReplySpoken?.();
         }
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Chat failed.");
+        setError(formatChatError(err, settings.webSearchEnabled));
         if (voiceConversationRef.current) {
           voiceConversationRef.current = false;
           setVoiceConversation(false);
