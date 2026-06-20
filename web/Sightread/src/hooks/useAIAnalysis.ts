@@ -144,6 +144,7 @@ export function useAIAnalysis(settings: Settings) {
     (video: HTMLVideoElement | null) => {
       if (!video || video.readyState < 2) return;
       if (!settings.isAIEnabled) return;
+      if (settings.visionManualOnly) return;
 
       if (!hasApiKeyForProvider(settings)) {
         if (!didShowMissingKeyError.current) {

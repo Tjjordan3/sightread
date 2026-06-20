@@ -176,6 +176,7 @@ export function StreamScreen({
             aiState={displayState}
             promptTitle={getVisionPrompt(settings).title}
             ttsEnabled={settings.isTTSEnabled}
+            manualOnly={settings.visionManualOnly}
             canDiscuss={displayState.latestResponse.length > 0}
             onReadAloud={settings.isTTSEnabled ? handleReadAloud : undefined}
             onDiscuss={handleDiscuss}

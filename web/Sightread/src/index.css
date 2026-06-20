@@ -957,6 +957,44 @@ select {
   font-size: 0.95rem;
 }
 
+.settings-radio-group {
+  margin: 12px 0 0;
+  padding: 0;
+  border: none;
+  display: grid;
+  gap: 10px;
+}
+
+.settings-radio-group__legend {
+  padding: 0;
+  margin-bottom: 4px;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.settings-radio-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.settings-radio-option input {
+  flex-shrink: 0;
+}
+
+.settings-radio-group__slider {
+  margin: 0 0 0 24px;
+}
+
+.settings-key-status {
+  margin: 0 0 8px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-success);
+}
+
 .storage-banner {
   margin: 0;
   padding: 10px 16px;

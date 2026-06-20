@@ -22,6 +22,7 @@ export interface Settings {
   promptMode: PromptMode;
   selectedPromptId: string;
   analysisIntervalSec: number;
+  visionManualOnly: boolean;
   isAIEnabled: boolean;
   isTTSEnabled: boolean;
   speakChatReplies: boolean;
@@ -49,6 +50,7 @@ const DEFAULTS: Settings = {
   promptMode: "auto",
   selectedPromptId: "scene",
   analysisIntervalSec: 10,
+  visionManualOnly: false,
   isAIEnabled: true,
   isTTSEnabled: false,
   speakChatReplies: true,
@@ -94,6 +96,7 @@ export function loadSettings(): Settings {
       provider,
       theme,
       promptMode: parsed.promptMode === "manual" ? "manual" : "auto",
+      visionManualOnly: parsed.visionManualOnly === true,
       analysisIntervalSec: Math.min(
         30,
         Math.max(5, parsed.analysisIntervalSec ?? DEFAULTS.analysisIntervalSec),

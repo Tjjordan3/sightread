@@ -1,8 +1,8 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { clearChatHistory } from "../lib/clearChatHistory";
 import { testNvidiaConnection } from "../lib/nvidia/request";
 import { PROMPT_PRESETS } from "../lib/promptPresets";
-import { AI_PROVIDERS } from "../lib/providers";
+import { AI_PROVIDERS, type AIProvider } from "../lib/providers";
 import type { Settings } from "../lib/settings";
 import { unlockSpeech } from "../lib/speech";
 import { WAKE_PHRASE } from "../lib/voice/wakeWord";
@@ -34,6 +34,13 @@ export function SettingsScreen({
     status: "idle" | "running" | "ok" | "error";
     message: string;
   }>({ status: "idle", message: "" });
+  const [keyEditProvider, setKeyEditProvider] = useState<AIProvider>(
+    settings.provider,
+  );
+
+  useEffect(() => {
+    setKeyEditProvider(settings.provider);
+  }, [settings.provider]);
 
   const runNvidiaTest = () => {
     setNvidiaTest({ status: "running", message: "Testing proxy and API key…" });
@@ -55,6 +62,10 @@ export function SettingsScreen({
         });
       });
   };
+
+  const keyProviderDef = AI_PROVIDERS.find((p) => p.id === keyEditProvider)!;
+  const keyField = KEY_FIELDS[keyEditProvider];
+  const keyConfigured = settings[keyField].trim().length > 0;
 
   return (
     <div className="screen settings-screen">
@@ -86,30 +97,12 @@ export function SettingsScreen({
           Auto follows your device&apos;s light or dark mode setting.
         </p>
 
-        <h3 className="settings-section-title">Vision</h3>
-        <label className="switch-row">
-          <span>Enable AI analysis</span>
-          <input
-            type="checkbox"
-            checked={settings.isAIEnabled}
-            onChange={(e) => onUpdate({ isAIEnabled: e.target.checked })}
-          />
-        </label>
-
-        <label className="switch-row">
-          <span>Read vision responses aloud</span>
-          <input
-            type="checkbox"
-            checked={settings.isTTSEnabled}
-            onChange={(e) => {
-              onUpdate({ isTTSEnabled: e.target.checked });
-              if (e.target.checked) unlockSpeech();
-            }}
-          />
-        </label>
-
+        <h3 className="settings-section-title">AI provider</h3>
+        <p className="footnote">
+          Used for Agent chat, vision analysis, and web search.
+        </p>
         <label className="field">
-          <span>Provider</span>
+          <span>Active provider</span>
           <select
             value={settings.provider}
             onChange={(e) =>
@@ -176,6 +169,75 @@ export function SettingsScreen({
         )}
 
         <label className="switch-row">
+          <span>Web Search</span>
+          <input
+            type="checkbox"
+            checked={settings.webSearchEnabled}
+            onChange={(e) => onUpdate({ webSearchEnabled: e.target.checked })}
+          />
+        </label>
+
+        <h3 className="settings-section-title">API keys</h3>
+        <p className="footnote">
+          Keys are stored in this browser only (localStorage). Calls go directly
+          from your device to the selected provider. Changes save automatically.
+        </p>
+
+        <label className="field">
+          <span>Edit key for</span>
+          <select
+            value={keyEditProvider}
+            onChange={(e) =>
+              setKeyEditProvider(e.target.value as AIProvider)
+            }
+          >
+            {AI_PROVIDERS.map((provider) => (
+              <option key={provider.id} value={provider.id}>
+                {provider.label}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        {keyConfigured && (
+          <p className="settings-key-status">Configured</p>
+        )}
+
+        <label className="field">
+          <span>{keyProviderDef.keyLabel}</span>
+          <input
+            type="password"
+            autoComplete="off"
+            value={settings[keyField]}
+            onChange={(e) => onUpdate({ [keyField]: e.target.value })}
+            placeholder={keyProviderDef.keyPlaceholder}
+          />
+          <span className="footnote">{keyProviderDef.keyHint}</span>
+        </label>
+
+        <h3 className="settings-section-title">Vision</h3>
+        <label className="switch-row">
+          <span>Enable AI analysis</span>
+          <input
+            type="checkbox"
+            checked={settings.isAIEnabled}
+            onChange={(e) => onUpdate({ isAIEnabled: e.target.checked })}
+          />
+        </label>
+
+        <label className="switch-row">
+          <span>Read vision responses aloud</span>
+          <input
+            type="checkbox"
+            checked={settings.isTTSEnabled}
+            onChange={(e) => {
+              onUpdate({ isTTSEnabled: e.target.checked });
+              if (e.target.checked) unlockSpeech();
+            }}
+          />
+        </label>
+
+        <label className="switch-row">
           <span>Smart prompts (recommended)</span>
           <input
             type="checkbox"
@@ -209,32 +271,46 @@ export function SettingsScreen({
           </label>
         )}
 
-        <label className="field">
-          <span>Analyze every {settings.analysisIntervalSec}s</span>
-          <input
-            type="range"
-            min={5}
-            max={30}
-            step={1}
-            value={settings.analysisIntervalSec}
-            onChange={(e) =>
-              onUpdate({
-                analysisIntervalSec: Number(e.target.value),
-              })
-            }
-          />
-        </label>
+        <fieldset className="settings-radio-group">
+          <legend className="settings-radio-group__legend">Analysis timing</legend>
+          <label className="settings-radio-option">
+            <input
+              type="radio"
+              name="vision-timing"
+              checked={!settings.visionManualOnly}
+              onChange={() => onUpdate({ visionManualOnly: false })}
+            />
+            <span>Automatic</span>
+          </label>
+          {!settings.visionManualOnly && (
+            <label className="field settings-radio-group__slider">
+              <span>Every {settings.analysisIntervalSec}s</span>
+              <input
+                type="range"
+                min={5}
+                max={30}
+                step={1}
+                value={settings.analysisIntervalSec}
+                onChange={(e) =>
+                  onUpdate({
+                    analysisIntervalSec: Number(e.target.value),
+                  })
+                }
+              />
+            </label>
+          )}
+          <label className="settings-radio-option">
+            <input
+              type="radio"
+              name="vision-timing"
+              checked={settings.visionManualOnly}
+              onChange={() => onUpdate({ visionManualOnly: true })}
+            />
+            <span>Manual only — tap Analyze now on the Vision tab</span>
+          </label>
+        </fieldset>
 
         <h3 className="settings-section-title">Agent & voice</h3>
-        <label className="switch-row">
-          <span>Web Search</span>
-          <input
-            type="checkbox"
-            checked={settings.webSearchEnabled}
-            onChange={(e) => onUpdate({ webSearchEnabled: e.target.checked })}
-          />
-        </label>
-
         <label className="switch-row">
           <span>Speak agent replies in chat</span>
           <input
@@ -277,29 +353,6 @@ export function SettingsScreen({
             }
           />
         </label>
-
-        <h3 className="settings-section-title">API keys</h3>
-        <p className="footnote">
-          Keys are stored in this browser only (localStorage). Calls go directly
-          from your device to the selected provider. Changes save automatically.
-        </p>
-
-        {AI_PROVIDERS.map((provider) => {
-          const field = KEY_FIELDS[provider.id];
-          return (
-            <label key={provider.id} className="field">
-              <span>{provider.keyLabel}</span>
-              <input
-                type="password"
-                autoComplete="off"
-                value={settings[field]}
-                onChange={(e) => onUpdate({ [field]: e.target.value })}
-                placeholder={provider.keyPlaceholder}
-              />
-              <span className="footnote">{provider.keyHint}</span>
-            </label>
-          );
-        })}
 
         <h3 className="settings-section-title">Data</h3>
         <button

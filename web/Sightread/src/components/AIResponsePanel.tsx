@@ -6,6 +6,7 @@ interface AIResponsePanelProps {
   aiState: AIUiState;
   promptTitle: string;
   ttsEnabled: boolean;
+  manualOnly?: boolean;
   canDiscuss?: boolean;
   onReadAloud?: () => void;
   onDiscuss?: (mode: VisionDiscussMode) => void;
@@ -15,6 +16,7 @@ export function AIResponsePanel({
   aiState,
   promptTitle,
   ttsEnabled,
+  manualOnly = false,
   canDiscuss = false,
   onReadAloud,
   onDiscuss,
@@ -36,7 +38,10 @@ export function AIResponsePanel({
         <p className="ai-panel__error">{aiState.errorMessage}</p>
       ) : (
         <p className="ai-panel__text">
-          {aiState.latestResponse || "Waiting for frames…"}
+          {aiState.latestResponse ||
+            (manualOnly
+              ? "Tap Analyze now when you're ready."
+              : "Waiting for frames…")}
         </p>
       )}
       <p className="ai-panel__meta">
