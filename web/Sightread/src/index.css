@@ -719,8 +719,12 @@ select {
   grid-template-columns: repeat(3, 1fr);
   border-top: 1px solid var(--border);
   background: var(--bg);
-  padding: 4px 8px calc(4px + env(safe-area-inset-bottom));
+  padding: 4px 8px 4px;
   flex-shrink: 0;
+}
+
+.app-shell__nav:not(:has(+ .app-shell__footer)) {
+  padding-bottom: calc(4px + env(safe-area-inset-bottom));
 }
 
 .app-shell__tab {
@@ -744,6 +748,22 @@ select {
 .app-shell__tab--active {
   color: var(--text-primary);
   background: var(--bg-accent);
+}
+
+.app-shell__footer {
+  flex-shrink: 0;
+  padding: 6px 12px calc(6px + env(safe-area-inset-bottom));
+  text-align: center;
+  border-top: 1px solid var(--border-subtle);
+  background: var(--bg);
+}
+
+.app-shell__footer p {
+  margin: 0;
+  font-size: 0.68rem;
+  font-weight: 400;
+  color: var(--text-muted);
+  opacity: 0.72;
 }
 
 .agent-chat-screen {

@@ -31,6 +31,11 @@ export function AppShell({ activeTab, onTabChange, children }: AppShellProps) {
           </button>
         ))}
       </nav>
+      {activeTab === "settings" && (
+        <footer className="app-shell__footer">
+          <p>© 2026 SightRead AI</p>
+        </footer>
+      )}
     </div>
   );
 }
