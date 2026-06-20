@@ -211,6 +211,7 @@ export function AgentChatView({
       <ChatMessageList
         messages={chat.messages}
         isSending={chat.isSending}
+        webSearchEnabled={settings.webSearchEnabled}
         listRef={listRef}
         emptyHint="Try: “What can you help me with?” or send a photo of what's in front of you."
       />

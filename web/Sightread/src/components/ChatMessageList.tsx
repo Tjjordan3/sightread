@@ -4,6 +4,7 @@ import type { ChatMessage } from "../lib/chat";
 interface ChatMessageListProps {
   messages: ChatMessage[];
   isSending: boolean;
+  webSearchEnabled?: boolean;
   listRef?: RefObject<HTMLDivElement | null>;
   emptyHint?: string;
 }
@@ -11,6 +12,7 @@ interface ChatMessageListProps {
 export function ChatMessageList({
   messages,
   isSending,
+  webSearchEnabled = false,
   listRef,
   emptyHint,
 }: ChatMessageListProps) {
@@ -48,7 +50,18 @@ export function ChatMessageList({
           )}
         </div>
       ))}
-      {isSending && <p className="chat-panel__thinking">Thinking…</p>}
+      {isSending && webSearchEnabled && (
+        <div
+          className="chat-bubble chat-bubble--assistant chat-bubble--searching"
+          role="status"
+          aria-live="polite"
+        >
+          <p>Searching the web…</p>
+        </div>
+      )}
+      {isSending && !webSearchEnabled && (
+        <p className="chat-panel__thinking">Thinking…</p>
+      )}
     </div>
   );
 }

@@ -532,6 +532,12 @@ select {
   background: var(--bubble-user);
 }
 
+.chat-bubble--searching {
+  font-style: italic;
+  color: var(--text-muted);
+  opacity: 0.72;
+}
+
 .chat-bubble p {
   margin: 0;
 }
