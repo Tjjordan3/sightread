@@ -2,11 +2,12 @@ import {
   formatSearchResultsForTool,
   webSearch,
   type SearchCitation,
-} from "../search/serperClient";
+} from "../search/tavilyClient";
 import { getApiKey, type Settings } from "../settings";
 import { VisionAIError } from "../vision/types";
 import {
   getOpenAICompatibleConfig,
+  stripImageUrlsForToolUse,
   supportsWebSearchTools,
 } from "./openaiConfig";
 import type { ChatAIService, ChatMessage, ChatReply } from "./types";
@@ -89,8 +90,13 @@ async function runToolAgentChat(
   const apiKey = getApiKey(settings);
   if (!apiKey.trim()) throw new VisionAIError("Add API key in Settings.");
 
-  const { url, model, extraHeaders } = getOpenAICompatibleConfig(settings);
-  const apiMessages = toApiMessages(messages, attachedImageBase64);
+  const { url, model, extraHeaders } = getOpenAICompatibleConfig(settings, {
+    toolUse: true,
+  });
+  const apiMessages = stripImageUrlsForToolUse(
+    settings.provider,
+    toApiMessages(messages, attachedImageBase64),
+  );
   const allCitations: SearchCitation[] = [];
 
   for (let round = 0; round < 3; round++) {
