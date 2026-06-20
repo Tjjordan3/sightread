@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useConversationSession } from "../hooks/useConversationSession";
+import type { ChatMessage } from "../lib/chat";
 import { hasOnboarded, markOnboarded } from "../lib/onboarding";
 import { hasApiKeyForProvider, type Settings } from "../lib/settings";
 import type { VisionDiscussHandoff } from "../lib/visionDiscuss";
@@ -11,6 +12,26 @@ export interface ComposerSeed {
   id: number;
   text: string;
   blob: Blob;
+}
+
+function hasUserMessages(messages: ChatMessage[]): boolean {
+  return messages.some((message) => message.role === "user");
+}
+
+export function ChatEmptyBrandedHeader() {
+  return (
+    <div className="chat-empty-brand">
+      <img
+        src="/favicon.svg"
+        alt=""
+        className="chat-empty-brand__mark"
+        width={44}
+        height={42}
+      />
+      <h2 className="chat-empty-brand__wordmark">SightRead</h2>
+      <p className="chat-empty-brand__tagline">Your AI that sees what you see</p>
+    </div>
+  );
 }
 
 interface AgentChatScreenProps {
@@ -37,6 +58,9 @@ export function AgentChatScreen({
   const [composerSeed, setComposerSeed] = useState<ComposerSeed | null>(null);
   const [viewKey, setViewKey] = useState(0);
   const [onboardingDismissed, setOnboardingDismissed] = useState(false);
+  const [brandingHidden, setBrandingHidden] = useState(() =>
+    hasUserMessages(session.initialMessages),
+  );
 
   const needsOnboarding =
     !onboardingDismissed &&
@@ -44,11 +68,25 @@ export function AgentChatScreen({
     !hasApiKeyForProvider(settings);
 
   useEffect(() => {
+    setBrandingHidden(hasUserMessages(session.initialMessages));
+  }, [session.activeConversation?.id, session.initialMessages]);
+
+  useEffect(() => {
     if (hasApiKeyForProvider(settings) && !hasOnboarded()) {
       markOnboarded();
       setOnboardingDismissed(true);
     }
   }, [settings]);
+
+  const showBrandedHeader = !brandingHidden;
+
+  const handleUserMessage = async (
+    message: ChatMessage,
+    imageBlob?: Blob,
+  ) => {
+    setBrandingHidden(true);
+    await session.persistUserMessage(message, imageBlob);
+  };
 
   useEffect(() => {
     if (!discussHandoff || !session.ready) return;
@@ -133,11 +171,13 @@ export function AgentChatScreen({
         settings={settings}
         initialMessages={session.initialMessages}
         composerSeed={composerSeed}
-        onUserMessage={session.persistUserMessage}
+        onUserMessage={handleUserMessage}
         onAssistantMessage={session.persistAssistantMessage}
         onOpenHistory={() => setShowHistory(true)}
         title={session.activeConversation?.title ?? "Sightread Agent"}
         passiveListening={settings.alwaysListening || settings.wakeWordEnabled}
+        showBrandedHeader={showBrandedHeader}
+        brandedHeader={<ChatEmptyBrandedHeader />}
       />
     </div>
   );

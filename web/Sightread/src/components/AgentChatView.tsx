@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 import { useAgentChat, WELCOME_MESSAGE } from "../hooks/useAgentChat";
 import { useSpeechRecognition } from "../hooks/useSpeechRecognition";
 import { useVoiceSession } from "../hooks/useVoiceSession";
@@ -25,6 +25,8 @@ export interface AgentChatViewProps {
   className?: string;
   /** Auto-start mic for wake phrase / always listening. Off for vision quick-chat overlay. */
   passiveListening?: boolean;
+  showBrandedHeader?: boolean;
+  brandedHeader?: ReactNode;
 }
 
 export function AgentChatView({
@@ -40,6 +42,8 @@ export function AgentChatView({
   title = "Sightread Agent",
   className = "",
   passiveListening = false,
+  showBrandedHeader = false,
+  brandedHeader = null,
 }: AgentChatViewProps) {
   const listRef = useRef<HTMLDivElement>(null);
   const voiceConversationRef = useRef(false);
@@ -208,12 +212,18 @@ export function AgentChatView({
 
       {error && <p className="chat-panel__error">{error}</p>}
 
+      {showBrandedHeader && brandedHeader}
+
       <ChatMessageList
         messages={chat.messages}
         isSending={chat.isSending}
         webSearchEnabled={settings.webSearchEnabled}
         listRef={listRef}
-        emptyHint="Try: “What can you help me with?” or send a photo of what's in front of you."
+        emptyHint={
+          showBrandedHeader
+            ? undefined
+            : "Try: “What can you help me with?” or send a photo of what's in front of you."
+        }
       />
 
       <ChatComposer

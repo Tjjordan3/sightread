@@ -779,6 +779,36 @@ select {
   margin: 24px 12px;
 }
 
+.chat-empty-brand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 20px 16px 8px;
+  flex-shrink: 0;
+}
+
+.chat-empty-brand__mark {
+  display: block;
+  margin-bottom: 10px;
+}
+
+.chat-empty-brand__wordmark {
+  margin: 0;
+  font-size: 1.65rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+}
+
+.chat-empty-brand__tagline {
+  margin: 8px 0 0;
+  font-size: 0.95rem;
+  font-weight: 300;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
 .chat-bubble__image {
   display: block;
   max-width: 220px;
