@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
 import { useConversationSession } from "../hooks/useConversationSession";
-import type { Settings } from "../lib/settings";
+import { hasOnboarded, markOnboarded } from "../lib/onboarding";
+import { hasApiKeyForProvider, type Settings } from "../lib/settings";
 import type { VisionDiscussHandoff } from "../lib/visionDiscuss";
 import { AgentChatView } from "./AgentChatView";
+import { ChatOnboardingOverlay } from "./ChatOnboardingOverlay";
 import { ConversationList } from "./ConversationList";
 
 export interface ComposerSeed {
@@ -15,6 +17,8 @@ interface AgentChatScreenProps {
   settings: Settings;
   discussHandoff?: VisionDiscussHandoff | null;
   onDiscussHandoffConsumed?: () => void;
+  onUpdateSettings: (patch: Partial<Settings>) => void;
+  onOpenSettings: () => void;
 }
 
 function buildDiscussSeedText(description: string): string {
@@ -25,11 +29,26 @@ export function AgentChatScreen({
   settings,
   discussHandoff = null,
   onDiscussHandoffConsumed,
+  onUpdateSettings,
+  onOpenSettings,
 }: AgentChatScreenProps) {
   const session = useConversationSession();
   const [showHistory, setShowHistory] = useState(false);
   const [composerSeed, setComposerSeed] = useState<ComposerSeed | null>(null);
   const [viewKey, setViewKey] = useState(0);
+  const [onboardingDismissed, setOnboardingDismissed] = useState(false);
+
+  const needsOnboarding =
+    !onboardingDismissed &&
+    !hasOnboarded() &&
+    !hasApiKeyForProvider(settings);
+
+  useEffect(() => {
+    if (hasApiKeyForProvider(settings) && !hasOnboarded()) {
+      markOnboarded();
+      setOnboardingDismissed(true);
+    }
+  }, [settings]);
 
   useEffect(() => {
     if (!discussHandoff || !session.ready) return;
@@ -63,6 +82,19 @@ export function AgentChatScreen({
     return (
       <div className="screen agent-chat-screen agent-chat-screen--loading">
         <p>Loading conversations…</p>
+      </div>
+    );
+  }
+
+  if (needsOnboarding) {
+    return (
+      <div className="screen agent-chat-screen agent-chat-screen--onboarding">
+        <ChatOnboardingOverlay
+          settings={settings}
+          onUpdateSettings={onUpdateSettings}
+          onOpenSettings={onOpenSettings}
+          onComplete={() => setOnboardingDismissed(true)}
+        />
       </div>
     );
   }
