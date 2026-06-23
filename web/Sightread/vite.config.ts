@@ -24,7 +24,7 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: "autoUpdate",
-      includeAssets: ["favicon.svg", "icons/*.png"],
+      includeAssets: ["favicon.svg", "icons/*.png", "theme-bootstrap.js"],
       manifest: {
         name: "Sightread",
         short_name: "Sightread",
