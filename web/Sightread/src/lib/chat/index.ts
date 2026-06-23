@@ -3,6 +3,7 @@ import {
   webSearch,
   type SearchCitation,
 } from "../search/tavilyClient";
+import { sanitizeCitations } from "../safeUrl";
 import { getApiKey, type Settings } from "../settings";
 import { VisionAIError } from "../vision/types";
 import {
@@ -76,7 +77,7 @@ function toApiMessages(
 
 function dedupeCitations(citations: SearchCitation[]): SearchCitation[] {
   const seen = new Set<string>();
-  return citations.filter((c) => {
+  return sanitizeCitations(citations).filter((c) => {
     if (!c.url || seen.has(c.url)) return false;
     seen.add(c.url);
     return true;
@@ -225,11 +226,7 @@ function createLegacyChatService(settings: Settings): ChatAIService {
       );
     case "nvidia":
       return wrapLegacy(
-        createNvidiaChatService(
-          apiKey,
-          settings.nvidiaModel,
-          settings.nvidiaProxyPath,
-        ).chat,
+        createNvidiaChatService(apiKey, settings.nvidiaModel).chat,
       );
   }
 }

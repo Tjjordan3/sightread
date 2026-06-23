@@ -26,10 +26,6 @@ export function createVisionService(settings: Settings): VisionAIService {
     case "openrouter":
       return createOpenRouterVisionService(apiKey, settings.openrouterModel);
     case "nvidia":
-      return createNvidiaVisionService(
-        apiKey,
-        settings.nvidiaModel,
-        settings.nvidiaProxyPath,
-      );
+      return createNvidiaVisionService(apiKey, settings.nvidiaModel);
   }
 }

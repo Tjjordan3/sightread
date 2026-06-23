@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import type { ChatMessage } from "../lib/chat";
 import { createId } from "../lib/uuid";
+import { sanitizeCitations } from "../lib/safeUrl";
 import {
   createConversation,
   getConversation,
@@ -157,7 +158,9 @@ export function useConversationSession() {
         role: "assistant",
         text: message.text,
         createdAt: Date.now(),
-        citations: message.citations,
+        citations: message.citations
+          ? sanitizeCitations(message.citations)
+          : undefined,
       });
       const list = await refreshList();
       setConversations(list);

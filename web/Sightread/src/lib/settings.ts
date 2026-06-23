@@ -18,7 +18,6 @@ export interface Settings {
   theme: ThemeSetting;
   openrouterModel: string;
   nvidiaModel: string;
-  nvidiaProxyPath: string;
   promptMode: PromptMode;
   selectedPromptId: string;
   analysisIntervalSec: number;
@@ -46,7 +45,6 @@ const DEFAULTS: Settings = {
   theme: "auto",
   openrouterModel: "google/gemini-2.0-flash-001",
   nvidiaModel: "meta/llama-3.2-11b-vision-instruct",
-  nvidiaProxyPath: "/api/nvidia/v1/chat/completions",
   promptMode: "auto",
   selectedPromptId: "scene",
   analysisIntervalSec: 10,
@@ -83,27 +81,31 @@ export function loadSettings(): Settings {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return { ...DEFAULTS };
-    const parsed = JSON.parse(raw) as Partial<Settings>;
-    const provider = VALID_PROVIDERS.has(parsed.provider ?? "")
+    const parsed = JSON.parse(raw) as Partial<Settings> & {
+      nvidiaProxyPath?: string;
+    };
+    const { nvidiaProxyPath: _legacyProxyPath, ...rest } = parsed;
+    void _legacyProxyPath;
+    const provider = VALID_PROVIDERS.has(rest.provider ?? "")
       ? (parsed.provider as AIProvider)
       : DEFAULTS.provider;
-    const theme = VALID_THEMES.has(parsed.theme ?? "")
-      ? (parsed.theme as ThemeSetting)
+    const theme = VALID_THEMES.has(rest.theme ?? "")
+      ? (rest.theme as ThemeSetting)
       : DEFAULTS.theme;
     return {
       ...DEFAULTS,
-      ...parsed,
+      ...rest,
       provider,
       theme,
-      promptMode: parsed.promptMode === "manual" ? "manual" : "auto",
-      visionManualOnly: parsed.visionManualOnly === true,
+      promptMode: rest.promptMode === "manual" ? "manual" : "auto",
+      visionManualOnly: rest.visionManualOnly === true,
       analysisIntervalSec: Math.min(
         30,
-        Math.max(5, parsed.analysisIntervalSec ?? DEFAULTS.analysisIntervalSec),
+        Math.max(5, rest.analysisIntervalSec ?? DEFAULTS.analysisIntervalSec),
       ),
       silenceTimeoutMs: Math.min(
         3000,
-        Math.max(600, parsed.silenceTimeoutMs ?? DEFAULTS.silenceTimeoutMs),
+        Math.max(600, rest.silenceTimeoutMs ?? DEFAULTS.silenceTimeoutMs),
       ),
     };
   } catch {

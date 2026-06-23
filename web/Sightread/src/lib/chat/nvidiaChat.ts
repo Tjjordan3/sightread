@@ -1,11 +1,7 @@
 import { nvidiaChatCompletion, readNvidiaResponse } from "../nvidia/request";
 import { buildTranscript, type ChatMessage } from "./types";
 
-export function createNvidiaChatService(
-  apiKey: string,
-  model: string,
-  proxyPath?: string,
-) {
+export function createNvidiaChatService(apiKey: string, model: string) {
   return {
     async chat(messages: ChatMessage[], attachedImageBase64?: string): Promise<string> {
       const content: Array<Record<string, unknown>> = [
@@ -20,15 +16,11 @@ export function createNvidiaChatService(
         });
       }
 
-      const response = await nvidiaChatCompletion(
-        apiKey,
-        {
-          model,
-          max_tokens: 400,
-          messages: [{ role: "user", content }],
-        },
-        proxyPath,
-      );
+      const response = await nvidiaChatCompletion(apiKey, {
+        model,
+        max_tokens: 400,
+        messages: [{ role: "user", content }],
+      });
       return readNvidiaResponse(response);
     },
   };

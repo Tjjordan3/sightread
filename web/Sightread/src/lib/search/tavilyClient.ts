@@ -1,3 +1,4 @@
+import { sanitizeCitations } from "../safeUrl";
 import { VisionAIError } from "../vision/types";
 
 export interface SearchCitation {
@@ -34,7 +35,7 @@ export async function webSearch(query: string): Promise<SearchCitation[]> {
     );
   }
 
-  return data.results ?? [];
+  return sanitizeCitations(data.results ?? []);
 }
 
 export function formatSearchResultsForTool(results: SearchCitation[]): string {

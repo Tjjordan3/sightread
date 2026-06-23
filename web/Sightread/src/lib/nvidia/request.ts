@@ -1,29 +1,25 @@
 import { VisionAIError } from "../vision/types";
 
-const DEFAULT_PROXY_PATH = "/api/nvidia/v1/chat/completions";
+const NVIDIA_CHAT_PATH = "/api/nvidia/v1/chat/completions";
+const NVIDIA_HEALTH_PATH = "/api/nvidia/v1/health";
 
-export function resolveNvidiaUrl(proxyPath = DEFAULT_PROXY_PATH): string {
-  if (proxyPath.startsWith("http://") || proxyPath.startsWith("https://")) {
-    return proxyPath;
-  }
-  const path = proxyPath.startsWith("/") ? proxyPath : `/${proxyPath}`;
-  return `${window.location.origin}${path}`;
+export function resolveNvidiaUrl(): string {
+  return `${window.location.origin}${NVIDIA_CHAT_PATH}`;
 }
 
-export function resolveNvidiaHealthUrl(proxyPath = DEFAULT_PROXY_PATH): string {
-  return resolveNvidiaUrl(proxyPath).replace(/\/chat\/completions\/?$/, "/health");
+export function resolveNvidiaHealthUrl(): string {
+  return `${window.location.origin}${NVIDIA_HEALTH_PATH}`;
 }
 
 export async function nvidiaChatCompletion(
   apiKey: string,
   body: Record<string, unknown>,
-  proxyPath = DEFAULT_PROXY_PATH,
 ): Promise<Response> {
   if (!apiKey.trim()) throw new VisionAIError("Add API key in Settings.");
 
   let response: Response;
   try {
-    response = await fetch(resolveNvidiaUrl(proxyPath), {
+    response = await fetch(resolveNvidiaUrl(), {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -47,10 +43,10 @@ export async function nvidiaChatCompletion(
   return response;
 }
 
-export async function testNvidiaProxy(proxyPath = DEFAULT_PROXY_PATH): Promise<void> {
+export async function testNvidiaProxy(): Promise<void> {
   let response: Response;
   try {
-    response = await fetch(resolveNvidiaHealthUrl(proxyPath));
+    response = await fetch(resolveNvidiaHealthUrl());
   } catch {
     throw new VisionAIError(
       "NVIDIA proxy is not reachable. On the server, run scripts\\start-nvidia-proxy.cmd and ensure web.config is deployed.",
@@ -103,17 +99,12 @@ export async function readNvidiaResponse(response: Response): Promise<string> {
 export async function testNvidiaConnection(
   apiKey: string,
   model: string,
-  proxyPath = DEFAULT_PROXY_PATH,
 ): Promise<string> {
-  await testNvidiaProxy(proxyPath);
-  const response = await nvidiaChatCompletion(
-    apiKey,
-    {
-      model,
-      max_tokens: 16,
-      messages: [{ role: "user", content: "Reply with the word ok." }],
-    },
-    proxyPath,
-  );
+  await testNvidiaProxy();
+  const response = await nvidiaChatCompletion(apiKey, {
+    model,
+    max_tokens: 16,
+    messages: [{ role: "user", content: "Reply with the word ok." }],
+  });
   return readNvidiaResponse(response);
 }

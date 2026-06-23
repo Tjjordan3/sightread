@@ -47,8 +47,17 @@ function serperSearch(query, num = 5) {
         const chunks = [];
         res.on("data", (c) => chunks.push(c));
         res.on("end", () => {
+          const raw = Buffer.concat(chunks).toString("utf8");
+          if (res.statusCode < 200 || res.statusCode >= 300) {
+            console.error(
+              `Serper search failed (${res.statusCode}):`,
+              raw.slice(0, 500),
+            );
+            reject(new Error("Upstream search failed"));
+            return;
+          }
           try {
-            resolve(JSON.parse(Buffer.concat(chunks).toString("utf8")));
+            resolve(JSON.parse(raw));
           } catch (err) {
             reject(err);
           }
@@ -66,7 +75,6 @@ const server = http.createServer(async (req, res) => {
     writeJson(res, 200, {
       ok: true,
       service: "sightread-search-proxy",
-      configured: SERPER_API_KEY.length > 0,
     });
     return;
   }
@@ -79,7 +87,7 @@ const server = http.createServer(async (req, res) => {
 
   if (!SERPER_API_KEY) {
     writeJson(res, 503, {
-      error: "SERPER_API_KEY is not set on the server.",
+      error: "Search service unavailable",
     });
     return;
   }
@@ -101,8 +109,9 @@ const server = http.createServer(async (req, res) => {
 
     writeJson(res, 200, { query: query.trim(), results });
   } catch (err) {
+    console.error("Search proxy error:", err);
     writeJson(res, 502, {
-      error: err instanceof Error ? err.message : "Search failed",
+      error: "Search service unavailable",
     });
   }
 });

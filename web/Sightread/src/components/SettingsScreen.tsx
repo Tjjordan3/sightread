@@ -44,11 +44,7 @@ export function SettingsScreen({
 
   const runNvidiaTest = () => {
     setNvidiaTest({ status: "running", message: "Testing proxy and API key…" });
-    void testNvidiaConnection(
-      settings.nvidiaApiKey,
-      settings.nvidiaModel,
-      settings.nvidiaProxyPath,
-    )
+    void testNvidiaConnection(settings.nvidiaApiKey, settings.nvidiaModel)
       .then((reply) => {
         setNvidiaTest({
           status: "ok",

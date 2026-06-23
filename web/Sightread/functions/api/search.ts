@@ -25,11 +25,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
   }
 
   if (request.method === "GET") {
-    return Response.json({
-      ok: true,
-      service: "sightread-search-proxy",
-      configured: !!env.TAVILY_API_KEY,
-    });
+    return Response.json({ ok: true, service: "sightread-search-proxy" });
   }
 
   if (request.method !== "POST") {
@@ -38,8 +34,8 @@ export const onRequest: PagesFunction<Env> = async (context) => {
 
   if (!env.TAVILY_API_KEY) {
     return Response.json(
-      { error: "TAVILY_API_KEY is not configured on the server." },
-      { status: 503 }
+      { error: "Search service unavailable" },
+      { status: 503 },
     );
   }
 
@@ -55,22 +51,50 @@ export const onRequest: PagesFunction<Env> = async (context) => {
     return Response.json({ error: "Missing query" }, { status: 400 });
   }
 
-  const tavilyResponse = await fetch("https://api.tavily.com/search", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${env.TAVILY_API_KEY}`,
-    },
-    body: JSON.stringify({
-      query: query.trim(),
-      max_results: 5,
-      search_depth: "basic",
-    }),
-  });
+  let tavilyResponse: Response;
+  try {
+    tavilyResponse = await fetch("https://api.tavily.com/search", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${env.TAVILY_API_KEY}`,
+      },
+      body: JSON.stringify({
+        query: query.trim(),
+        max_results: 5,
+        search_depth: "basic",
+      }),
+    });
+  } catch (err) {
+    console.error("Tavily request failed:", err);
+    return Response.json(
+      { error: "Search service unavailable" },
+      { status: 502 },
+    );
+  }
 
-  const data = await tavilyResponse.json() as {
-    results?: { title: string; url: string; content: string }[];
-  };
+  if (!tavilyResponse.ok) {
+    const detail = await tavilyResponse.text();
+    console.error(
+      `Tavily search failed (${tavilyResponse.status}):`,
+      detail.slice(0, 500),
+    );
+    return Response.json(
+      { error: "Search service unavailable" },
+      { status: 502 },
+    );
+  }
+
+  let data: { results?: { title: string; url: string; content: string }[] };
+  try {
+    data = (await tavilyResponse.json()) as typeof data;
+  } catch (err) {
+    console.error("Tavily response parse error:", err);
+    return Response.json(
+      { error: "Search service unavailable" },
+      { status: 502 },
+    );
+  }
 
   const results = (data.results ?? []).slice(0, 5).map((item) => ({
     title: item.title ?? "",
@@ -80,6 +104,6 @@ export const onRequest: PagesFunction<Env> = async (context) => {
 
   return Response.json(
     { query: query.trim(), results },
-    { headers: { "Access-Control-Allow-Origin": "*" } }
+    { headers: { "Access-Control-Allow-Origin": "*" } },
   );
 };

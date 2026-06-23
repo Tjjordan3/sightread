@@ -103,7 +103,7 @@ export function getOpenAICompatibleConfig(
       };
     case "nvidia":
       return {
-        url: resolveNvidiaUrl(settings.nvidiaProxyPath),
+        url: resolveNvidiaUrl(),
         apiKey,
         model: settings.nvidiaModel,
       };
