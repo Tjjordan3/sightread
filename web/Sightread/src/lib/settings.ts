@@ -53,7 +53,7 @@ const DEFAULTS: Settings = {
   visionManualOnly: false,
   isAIEnabled: true,
   isTTSEnabled: false,
-  speakChatReplies: true,
+  speakChatReplies: false,
   alwaysListening: false,
   wakeWordEnabled: false,
   silenceTimeoutMs: 1200,
