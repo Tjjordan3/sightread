@@ -52,11 +52,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.meta.wearable.dat.core.types.Permission
 import com.meta.wearable.dat.core.types.PermissionStatus
 import com.meta.wearable.dat.externalsampleapps.sightread.BuildConfig
+import com.meta.wearable.dat.externalsampleapps.sightread.ai.SettingsRepository
 import com.meta.wearable.dat.externalsampleapps.sightread.wearables.WearablesViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -66,10 +68,12 @@ fun sightreadScaffold(
     onRequestWearablesPermission: suspend (Permission) -> PermissionStatus,
     modifier: Modifier = Modifier,
 ) {
+  val settings = remember { SettingsRepository(LocalContext.current) }
   val uiState by viewModel.uiState.collectAsStateWithLifecycle()
   val snackbarHostState = remember { SnackbarHostState() }
   val bottomSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
+  SightreadTheme(settings = settings) {
   // Observe recent errors and show snackbar
   LaunchedEffect(uiState.recentError) {
     uiState.recentError?.let { errorMessage ->
@@ -81,14 +85,11 @@ fun sightreadScaffold(
   Surface(modifier = modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
     Box(modifier = Modifier.fillMaxSize()) {
       when {
-        uiState.isStreaming ->
-            StreamScreen(
-                wearablesViewModel = viewModel,
-            )
         uiState.isRegistered ->
-            NonStreamScreen(
-                viewModel = viewModel,
+            RegisteredAppScaffold(
+                wearablesViewModel = viewModel,
                 onRequestWearablesPermission = onRequestWearablesPermission,
+                isStreaming = uiState.isStreaming,
             )
         else ->
             HomeScreen(
@@ -140,5 +141,6 @@ fun sightreadScaffold(
         }
       }
     }
+  }
   }
 }

@@ -65,7 +65,6 @@ import com.meta.wearable.dat.core.types.Permission
 import com.meta.wearable.dat.core.types.PermissionStatus
 import com.meta.wearable.dat.core.types.RegistrationState
 import com.meta.wearable.dat.externalsampleapps.sightread.R
-import com.meta.wearable.dat.externalsampleapps.sightread.ai.SettingsRepository
 import com.meta.wearable.dat.externalsampleapps.sightread.wearables.WearablesViewModel
 import kotlinx.coroutines.launch
 
@@ -83,13 +82,10 @@ fun NonStreamScreen(
   val gettingStartedSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
   val scope = rememberCoroutineScope()
   var dropdownExpanded by remember { mutableStateOf(false) }
-  var showSettings by remember { mutableStateOf(false) }
-  var showChat by remember { mutableStateOf(false) }
   val isDisconnectEnabled = uiState.registrationState == RegistrationState.REGISTERED
   val isUpdateRequired = uiState.isFirmwareUpdateRequired || uiState.isDatAppUpdateRequired
   val activity = LocalActivity.current
   val context = LocalContext.current
-  val settings = remember(context) { SettingsRepository(context) }
 
   MaterialTheme(colorScheme = darkColorScheme()) {
     Box(
@@ -110,20 +106,6 @@ fun NonStreamScreen(
             expanded = dropdownExpanded,
             onDismissRequest = { dropdownExpanded = false },
         ) {
-          DropdownMenuItem(
-              text = { Text(stringResource(R.string.chat_button)) },
-              onClick = {
-                showChat = true
-                dropdownExpanded = false
-              },
-          )
-          DropdownMenuItem(
-              text = { Text(stringResource(R.string.ai_settings_button)) },
-              onClick = {
-                showSettings = true
-                dropdownExpanded = false
-              },
-          )
           DropdownMenuItem(
               text = {
                 Text(
@@ -242,31 +224,6 @@ fun NonStreamScreen(
         }
       }
 
-      if (showSettings) {
-        ModalBottomSheet(
-            onDismissRequest = { showSettings = false },
-            sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
-        ) {
-          SettingsScreen(
-              settings = settings,
-              onDone = { showSettings = false },
-              modifier = Modifier.fillMaxSize(),
-          )
-        }
-      }
-
-      if (showChat) {
-        ModalBottomSheet(
-            onDismissRequest = { showChat = false },
-            sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
-        ) {
-          ChatScreen(
-              getCurrentFrame = { null },
-              onClose = { showChat = false },
-              modifier = Modifier.fillMaxSize(),
-          )
-        }
-      }
     }
   }
 }

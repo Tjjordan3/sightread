@@ -13,6 +13,11 @@ object VisionAIServiceFactory {
         AIProvider.GEMINI -> GeminiVisionService(settings.geminiApiKey)
         AIProvider.OPENAI -> OpenAIVisionService(settings.openAIApiKey)
         AIProvider.GROQ -> GroqVisionService(settings.groqApiKey)
+        AIProvider.ANTHROPIC -> AnthropicVisionService(settings.anthropicApiKey)
+        AIProvider.MISTRAL -> MistralVisionService(settings.mistralApiKey)
+        AIProvider.OPENROUTER ->
+            OpenRouterVisionService(settings.openrouterApiKey, settings.openrouterModel)
+        AIProvider.NVIDIA -> NvidiaVisionService(settings.nvidiaApiKey, settings.nvidiaModel)
       }
 }
 
