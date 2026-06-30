@@ -68,4 +68,4 @@ Docs: https://wearables.developer.meta.com/docs/develop/
 
 ## Android
 
-See [android/Sightread/README.md](../android/Sightread/README.md). Requires a GitHub token in `local.properties` for the DAT Maven package.
+See [android/Sightread/README.md](../android/Sightread/README.md) and [docs/ANDROID_ROADMAP.md](./ANDROID_ROADMAP.md). Requires a GitHub token in `local.properties` for the DAT Maven package.

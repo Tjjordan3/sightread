@@ -51,7 +51,7 @@ class AIAnalysisController(
   }
 
   fun processFrame(bitmap: Bitmap) {
-    if (!settings.isAIEnabled) return
+    if (!settings.isAIEnabled || settings.visionManualOnly) return
     if (!settings.hasApiKeyForCurrentProvider()) {
       if (!didShowMissingKeyError) {
         didShowMissingKeyError = true

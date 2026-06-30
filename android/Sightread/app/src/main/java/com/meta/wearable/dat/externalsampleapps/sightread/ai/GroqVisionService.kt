@@ -1,8 +1,7 @@
 package com.meta.wearable.dat.externalsampleapps.sightread.ai
 
 import android.util.Base64
-import java.net.HttpURLConnection
-import java.net.URL
+import com.meta.wearable.dat.externalsampleapps.sightread.network.ApiClient
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.json.JSONArray
@@ -13,7 +12,6 @@ class GroqVisionService(private val apiKey: String) : VisionAIService {
       withContext(Dispatchers.IO) {
         require(apiKey.isNotBlank()) { "Add a Groq API key in Settings." }
         val base64 = Base64.encodeToString(jpegData, Base64.NO_WRAP)
-        val url = URL("https://api.groq.com/openai/v1/chat/completions")
         val content =
             JSONArray()
                 .put(JSONObject().put("type", "text").put("text", prompt))
@@ -33,21 +31,15 @@ class GroqVisionService(private val apiKey: String) : VisionAIService {
                     "messages",
                     JSONArray().put(JSONObject().put("role", "user").put("content", content)),
                 )
-        val conn =
-            (url.openConnection() as HttpURLConnection).apply {
-              requestMethod = "POST"
-              setRequestProperty("Content-Type", "application/json")
-              setRequestProperty("Authorization", "Bearer $apiKey")
-              doOutput = true
-              outputStream.use { it.write(body.toString().toByteArray()) }
-            }
-        val code = conn.responseCode
-        val text =
-            (if (code in 200..299) conn.inputStream else conn.errorStream)
-                .bufferedReader()
-                .readText()
-        if (code !in 200..299) error("API error $code: $text")
-        JSONObject(text)
+                .toString()
+        val result =
+            ApiClient.postJson(
+                "https://api.groq.com/openai/v1/chat/completions",
+                body,
+                mapOf("Authorization" to "Bearer $apiKey"),
+            )
+        if (!result.isSuccess) error("API error ${result.code}: ${result.body}")
+        JSONObject(result.body)
             .getJSONArray("choices")
             .getJSONObject(0)
             .getJSONObject("message")

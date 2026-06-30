@@ -6,21 +6,10 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-// sightreadScaffold - DAT Application Navigation Orchestrator
+// sightreadScaffold - Agent-first navigation (web parity)
 //
-// This scaffold demonstrates a typical DAT application navigation pattern based on device
-// registration and streaming states from the DAT API.
-//
-// DAT State-Based Navigation:
-// - HomeScreen: When NOT registered (uiState.isRegistered = false) Shows initial registration UI
-//   calling Wearables.startRegistration()
-// - NonStreamScreen: When registered (uiState.isRegistered = true) but not streaming Shows device
-//   selection, permission checking, and pre-streaming setup
-// - StreamScreen: When actively streaming (uiState.isStreaming = true) Shows live video from
-//   Stream.videoStream and photo capture UI
-//
-// The scaffold also provides a debug menu (in DEBUG builds) that gives access to
-// MockDeviceKitScreen for testing DAT functionality without physical devices.
+// Always shows MainAppScaffold with Agent / Vision / Settings tabs.
+// Ray-Ban Meta glasses are optional — connect via Settings.
 
 package com.meta.wearable.dat.externalsampleapps.sightread.ui
 
@@ -52,11 +41,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.meta.wearable.dat.core.types.Permission
 import com.meta.wearable.dat.core.types.PermissionStatus
 import com.meta.wearable.dat.externalsampleapps.sightread.BuildConfig
+import com.meta.wearable.dat.externalsampleapps.sightread.ai.SettingsRepository
 import com.meta.wearable.dat.externalsampleapps.sightread.wearables.WearablesViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -66,10 +57,12 @@ fun sightreadScaffold(
     onRequestWearablesPermission: suspend (Permission) -> PermissionStatus,
     modifier: Modifier = Modifier,
 ) {
+  val settings = remember { SettingsRepository(LocalContext.current) }
   val uiState by viewModel.uiState.collectAsStateWithLifecycle()
   val snackbarHostState = remember { SnackbarHostState() }
   val bottomSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
+  SightreadTheme(settings = settings) {
   // Observe recent errors and show snackbar
   LaunchedEffect(uiState.recentError) {
     uiState.recentError?.let { errorMessage ->
@@ -80,21 +73,10 @@ fun sightreadScaffold(
 
   Surface(modifier = modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
     Box(modifier = Modifier.fillMaxSize()) {
-      when {
-        uiState.isStreaming ->
-            StreamScreen(
-                wearablesViewModel = viewModel,
-            )
-        uiState.isRegistered ->
-            NonStreamScreen(
-                viewModel = viewModel,
-                onRequestWearablesPermission = onRequestWearablesPermission,
-            )
-        else ->
-            HomeScreen(
-                viewModel = viewModel,
-            )
-      }
+      MainAppScaffold(
+          wearablesViewModel = viewModel,
+          onRequestWearablesPermission = onRequestWearablesPermission,
+      )
 
       SnackbarHost(
           hostState = snackbarHostState,
@@ -140,5 +122,6 @@ fun sightreadScaffold(
         }
       }
     }
+  }
   }
 }
