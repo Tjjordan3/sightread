@@ -6,21 +6,10 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-// sightreadScaffold - DAT Application Navigation Orchestrator
+// sightreadScaffold - Agent-first navigation (web parity)
 //
-// This scaffold demonstrates a typical DAT application navigation pattern based on device
-// registration and streaming states from the DAT API.
-//
-// DAT State-Based Navigation:
-// - HomeScreen: When NOT registered (uiState.isRegistered = false) Shows initial registration UI
-//   calling Wearables.startRegistration()
-// - NonStreamScreen: When registered (uiState.isRegistered = true) but not streaming Shows device
-//   selection, permission checking, and pre-streaming setup
-// - StreamScreen: When actively streaming (uiState.isStreaming = true) Shows live video from
-//   Stream.videoStream and photo capture UI
-//
-// The scaffold also provides a debug menu (in DEBUG builds) that gives access to
-// MockDeviceKitScreen for testing DAT functionality without physical devices.
+// Always shows MainAppScaffold with Agent / Vision / Settings tabs.
+// Ray-Ban Meta glasses are optional — connect via Settings.
 
 package com.meta.wearable.dat.externalsampleapps.sightread.ui
 
@@ -84,18 +73,10 @@ fun sightreadScaffold(
 
   Surface(modifier = modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
     Box(modifier = Modifier.fillMaxSize()) {
-      when {
-        uiState.isRegistered ->
-            RegisteredAppScaffold(
-                wearablesViewModel = viewModel,
-                onRequestWearablesPermission = onRequestWearablesPermission,
-                isStreaming = uiState.isStreaming,
-            )
-        else ->
-            HomeScreen(
-                viewModel = viewModel,
-            )
-      }
+      MainAppScaffold(
+          wearablesViewModel = viewModel,
+          onRequestWearablesPermission = onRequestWearablesPermission,
+      )
 
       SnackbarHost(
           hostState = snackbarHostState,

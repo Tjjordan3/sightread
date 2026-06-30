@@ -2,12 +2,32 @@
 
 Plan for bringing `android/Sightread` to feature and security parity with `web/Sightread`.
 
-**Status:** Phases 1–4 largely implemented on branch `cursor/android-web-parity-9029`. Phase 5 (web search proxy client, onboarding overlay, PDF export) remains.
+**Status:** Agent-first pivot implemented — app opens to Agent tab; phone camera vision default; glasses optional in Settings. Remaining: web search client, PDF export, wake phrase.
 
 ---
 
+## Product focus (web parity pivot)
+
+Android now matches the web app's **Agent-first** model:
+
+```
+Launch → Agent tab (default)
+       ├── Vision: Phone camera (default) | Glasses (optional, if connected)
+       └── Settings: API keys, theme, Connect glasses
+```
+
+| Before (glasses-first) | After (web-aligned) |
+|------------------------|---------------------|
+| Registration gate on launch | Open directly to Agent |
+| Vision = DAT device selection | Vision = phone camera + optional glasses |
+| Chat embedded in stream sheet | Agent tab with persistent history |
+| Glasses required for core UX | Glasses optional enhancement |
+
+Key files: `MainAppScaffold.kt`, `VisionTabScreen.kt`, `PhoneVisionScreen.kt`, `GlassesConnectSection.kt`
+
 ## Guiding principles
 
+- **Agent-first** — match web `App.tsx`; glasses are optional, not the entry gate.
 - **Privacy-first** — conversations and images stay on-device; no cloud sync or accounts.
 - **Reuse web concepts** — align naming, settings keys, storage limits, and UX with the web app.
 - **Preserve glasses value** — DAT streaming, photo capture, and Bluetooth SCO TTS remain first-class.
@@ -173,31 +193,35 @@ Settings remain in `SharedPreferences` / encrypted store — not per-conversatio
 
 ---
 
-## Navigation (target)
+## Navigation (implemented)
 
 ```
-Not registered → HomeScreen (DAT registration)
-
-Registered → RegisteredAppScaffold
-  ├── Agent tab   → AgentChatScreen (persistent, works without stream)
-  ├── Vision tab  → NonStreamScreen OR StreamScreen (DAT state)
-  └── Settings    → SettingsScreen
+Launch → MainAppScaffold
+  ├── Agent tab (default) → AgentChatScreen + shared VisionFrameState
+  ├── Vision tab → PhoneVisionScreen | StreamScreen (glasses)
+  └── Settings → SettingsScreen + GlassesConnectSection
 ```
 
-DAT registration flow is unchanged. Tabs appear after successful registration.
+DAT registration is optional via Settings → Connect glasses.
 
 ---
 
 ## Success criteria
 
-- [ ] API keys encrypted at rest (not plaintext in prefs file)
-- [ ] 7 providers work for vision and chat
-- [ ] Conversations survive app restart
-- [ ] New / switch / delete conversations
-- [ ] Agent / Vision / Settings tabs when registered
-- [ ] Glasses streaming, photo capture, SCO TTS still work
-- [ ] HTTPS only; OkHttp timeouts configured
-- [ ] Export shareable as JSON or Markdown
+- [x] API keys encrypted at rest (EncryptedSharedPreferences)
+- [x] 7 providers work for vision and chat
+- [x] Conversations survive app restart (Room DB)
+- [x] New / switch / delete conversations
+- [x] Agent / Vision / Settings tabs when registered
+- [x] Glasses streaming, photo capture, SCO TTS preserved
+- [x] HTTPS only; OkHttp timeouts configured
+- [x] Agent as default landing tab
+- [x] Phone camera vision without glasses (CameraX)
+- [x] Glasses connect demoted to Settings
+- [x] Shared vision frame for Agent attach
+- [x] Onboarding dialog on first launch
+- [ ] PDF export
+- [ ] Always-listening / wake phrase
 
 ---
 

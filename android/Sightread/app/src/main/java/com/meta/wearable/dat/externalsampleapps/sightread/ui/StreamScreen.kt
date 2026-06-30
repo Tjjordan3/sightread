@@ -35,11 +35,13 @@ import com.meta.wearable.dat.externalsampleapps.sightread.ai.ImageEncoding
 import com.meta.wearable.dat.externalsampleapps.sightread.ai.SettingsRepository
 import com.meta.wearable.dat.externalsampleapps.sightread.chat.VisionDiscussHandoff
 import com.meta.wearable.dat.externalsampleapps.sightread.stream.StreamViewModel
+import com.meta.wearable.dat.externalsampleapps.sightread.vision.VisionFrameState
 import com.meta.wearable.dat.externalsampleapps.sightread.wearables.WearablesViewModel
 
 @Composable
 fun StreamScreen(
     wearablesViewModel: WearablesViewModel,
+    visionFrameState: VisionFrameState? = null,
     onDiscussInAgent: (VisionDiscussHandoff) -> Unit = {},
     modifier: Modifier = Modifier,
     streamViewModel: StreamViewModel =
@@ -59,6 +61,10 @@ fun StreamScreen(
   LaunchedEffect(Unit) {
     streamViewModel.prepareForStreaming()
     streamViewModel.startStream()
+  }
+
+  LaunchedEffect(streamUiState.videoFrame) {
+    visionFrameState?.update(streamUiState.videoFrame)
   }
 
   Box(modifier = modifier.fillMaxSize()) {

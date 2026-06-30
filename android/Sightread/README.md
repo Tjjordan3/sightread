@@ -1,8 +1,8 @@
 # Sightread (Android)
 
-Kotlin + Jetpack Compose companion for Ray-Ban Meta glasses, based on Meta's CameraAccess sample with Sightread AI vision integration.
+Agent-first AI companion for Android — aligned with the web app. Chat, vision, and settings work immediately; Ray-Ban Meta glasses are an optional enhancement.
 
-See [docs/ANDROID_ROADMAP.md](../../docs/ANDROID_ROADMAP.md) for the web-parity plan and status.
+See [docs/ANDROID_ROADMAP.md](../../docs/ANDROID_ROADMAP.md) for architecture and status.
 
 ## Setup
 
@@ -12,29 +12,35 @@ See [docs/ANDROID_ROADMAP.md](../../docs/ANDROID_ROADMAP.md) for the web-parity 
    ```
    Token needs read access to [meta-wearables-dat-android](https://github.com/facebook/meta-wearables-dat-android).
 
-2. Open in Android Studio, sync Gradle, run on a physical device with Meta AI installed.
+2. Open in Android Studio, sync Gradle, run on a physical device.
 
-3. Enable Developer Mode in Meta AI and pair glasses (see `/docs/DEVELOPER_MODE.md`).
+3. **Optional glasses:** Settings → Ray-Ban Meta glasses → Connect. Requires Meta AI Developer Mode (see `/docs/DEVELOPER_MODE.md`).
 
-4. In-app: **Settings** tab → add API keys for your chosen provider.
+4. **Settings** tab → add API keys for your chosen provider.
+
+## App focus (matches web)
+
+| Tab | Purpose |
+|-----|---------|
+| **Agent** | Default home — persistent chat, voice input, attach current vision frame |
+| **Vision** | Phone camera (default) or optional glasses stream |
+| **Settings** | API keys, theme, glasses connect, export |
+
+No registration gate — the app opens directly to Agent.
 
 ## Features
 
-- DAT camera streaming (best-effort 720p/30; may auto-adjust)
-- **7 AI providers:** Gemini, OpenAI, Groq, Anthropic, Mistral, OpenRouter, NVIDIA NIM
-- Agent tab with persistent conversation history (Room DB)
-- Vision tab with live AI analysis + "Discuss in Agent" handoff
-- Encrypted API key storage (`EncryptedSharedPreferences`)
-- HTTPS-only networking (OkHttp + network security config)
-- Voice input (push-to-talk) in Agent chat
-- Export conversations as JSON
+- Agent chat with Room persistence (50 convos / 200 msgs)
+- **7 AI providers** with encrypted API keys
+- Phone camera vision (CameraX) — works without glasses
+- Optional Ray-Ban Meta DAT streaming when connected
+- Discuss in Agent from vision (phone or glasses)
+- Voice input (push-to-talk), TTS for vision and chat
 - Light / dark / system theme
-- Optional TTS for vision and chat replies (Bluetooth SCO to glasses)
-- Mock Device Kit (debug builds, ladybug FAB)
+- Export conversations as JSON
 
 ## Security
 
-- API keys stored in Android Keystore-backed encrypted prefs
-- `allowBackup="false"` — keys not included in device backups
-- Cleartext HTTP blocked via `network_security_config.xml`
-- Settings UI masks API keys by default
+- API keys in Android Keystore-backed encrypted prefs
+- HTTPS-only networking, OkHttp timeouts
+- `allowBackup="false"`

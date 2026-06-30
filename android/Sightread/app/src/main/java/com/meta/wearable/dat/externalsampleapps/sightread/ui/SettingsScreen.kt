@@ -45,6 +45,7 @@ import com.meta.wearable.dat.externalsampleapps.sightread.ai.SettingsRepository
 import com.meta.wearable.dat.externalsampleapps.sightread.ai.ThemeSetting
 import com.meta.wearable.dat.externalsampleapps.sightread.storage.ConversationRepository
 import com.meta.wearable.dat.externalsampleapps.sightread.storage.ExportManager
+import com.meta.wearable.dat.externalsampleapps.sightread.wearables.WearablesViewModel
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -53,6 +54,7 @@ fun SettingsScreen(
     settings: SettingsRepository,
     onDone: () -> Unit,
     onHistoryCleared: () -> Unit = {},
+    wearablesViewModel: WearablesViewModel? = null,
     modifier: Modifier = Modifier,
 ) {
   val context = LocalContext.current
@@ -87,6 +89,14 @@ fun SettingsScreen(
     Column(
         modifier = Modifier.verticalScroll(rememberScrollState()).padding(16.dp),
     ) {
+      wearablesViewModel?.let {
+        GlassesConnectSection(wearablesViewModel = it)
+        Text(
+            "AI & vision",
+            style = androidx.compose.material3.MaterialTheme.typography.titleMedium,
+            modifier = Modifier.padding(vertical = 8.dp),
+        )
+      }
       ThemeDropdown(settings)
       ProviderDropdown(settings)
       RowWithSwitch("Enable AI analysis", settings.isAIEnabled) { settings.isAIEnabled = it }
