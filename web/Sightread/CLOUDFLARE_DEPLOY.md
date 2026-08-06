@@ -6,10 +6,12 @@ Sightread ships as a static Vite build with **Pages Functions** for server-side 
 |-------|---------|
 | `POST /api/nvidia/v1/chat/completions` | Proxies NVIDIA NIM (browser CORS workaround) |
 | `GET /api/nvidia/v1/health` | Health check for NVIDIA proxy |
-| `POST /api/search` | Serper web search (keeps `SERPER_API_KEY` off the client) |
+| `POST /api/search` | Tavily web search (keeps `TAVILY_API_KEY` off the client) |
 | `GET /api/search` | Search proxy health / config status |
 
 Everything else is static assets from `dist/`.
+
+Search and NVIDIA POSTs are **same-origin only**, with per-IP rate limits and body/query size caps.
 
 ---
 
@@ -37,27 +39,29 @@ npm install
 Build settings:
 
 | Setting | Value |
-|---------|--------|
+|---------|-------|
 | Root directory | `web/Sightread` |
 | Build command | `npm run build` |
 | Build output directory | `dist` |
 
 Cloudflare auto-detects the `functions/` folder and `wrangler.toml` in the project root.
 
-### 3. Set the Serper secret
+### 3. Set the Tavily secret
 
-Web search requires a [Serper](https://serper.dev/) API key stored as a Pages secret:
+Web search requires a [Tavily](https://app.tavily.com/) API key stored as a Pages secret:
 
 ```bash
 cd web/Sightread
-npx wrangler pages secret put SERPER_API_KEY --project-name=sightread
+npx wrangler pages secret put TAVILY_API_KEY --project-name=sightread
 ```
 
 Paste your key when prompted. Repeat for **Preview** if you use preview deployments:
 
 ```bash
-npx wrangler pages secret put SERPER_API_KEY --project-name=sightread --env preview
+npx wrangler pages secret put TAVILY_API_KEY --project-name=sightread --env preview
 ```
+
+If you previously set `SERPER_API_KEY`, remove it and set `TAVILY_API_KEY` instead — production search uses Tavily only.
 
 NVIDIA does **not** need a server secret — users supply their own NVIDIA API key in Settings; the function forwards it in the `Authorization` header.
 
@@ -89,7 +93,7 @@ npm run dev
 ```
 
 - NVIDIA: proxied directly to `integrate.api.nvidia.com` via Vite.
-- Search: requires the local Node proxy (`npm run search-proxy` with `SERPER_API_KEY` set).
+- Search: requires the local Node proxy (`npm run search-proxy` with `TAVILY_API_KEY` set).
 
 ### Full stack with Cloudflare Functions
 
@@ -100,7 +104,7 @@ npm run pages:dev
 Builds the app and runs `wrangler pages dev dist`, so `/api/*` routes behave like production. Set secrets locally in `.dev.vars`:
 
 ```
-SERPER_API_KEY=your_key_here
+TAVILY_API_KEY=your_key_here
 ```
 
 `.dev.vars` is gitignored — never commit it.
@@ -150,7 +154,9 @@ Cloudflare Pages → your project → **Custom domains** → add your domain. HT
 | Symptom | Fix |
 |---------|-----|
 | NVIDIA "Failed to fetch" | Confirm `/api/nvidia/v1/health` returns `{ ok: true }`. Check browser network tab for 401/502. |
-| Search returns 503 | `SERPER_API_KEY` secret not set on the Pages project. |
+| Search returns 503 | `TAVILY_API_KEY` secret not set on the Pages project. |
+| Search returns 403 | Request was not same-origin (open the app from its Pages URL, not a foreign site). |
+| Search returns 429 | Per-IP rate limit; wait and retry. |
 | PWA/API conflict | Service worker excludes `/api/*` via `navigateFallbackDenylist` in `vite.config.ts`. |
 | Functions not running | Ensure `functions/` sits next to `wrangler.toml` under `web/Sightread`, not repo root. |
 
@@ -158,4 +164,4 @@ Cloudflare Pages → your project → **Custom domains** → add your domain. HT
 
 ## IIS vs Cloudflare
 
-The existing `server/*.mjs` proxies and `public/web.config` are for **IIS on Windows**. Cloudflare Pages replaces both with `functions/` — you do not need IIS or Node running on the server for `/api/*` when deployed to Cloudflare.
+The existing `server/*.mjs` proxies and `public/web.config` are for **IIS on Windows**. Cloudflare Pages replaces both with `functions/` — you do not need IIS or Node running on the server for `/api/*` when deployed to Cloudflare. Local IIS proxies also expect `TAVILY_API_KEY`.

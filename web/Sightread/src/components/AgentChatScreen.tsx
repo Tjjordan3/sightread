@@ -83,9 +83,10 @@ export function AgentChatScreen({
   const handleUserMessage = async (
     message: ChatMessage,
     imageBlob?: Blob,
+    conversationId?: string,
   ) => {
     setBrandingHidden(true);
-    await session.persistUserMessage(message, imageBlob);
+    await session.persistUserMessage(message, imageBlob, conversationId);
   };
 
   useEffect(() => {
@@ -169,6 +170,7 @@ export function AgentChatScreen({
       <AgentChatView
         key={`${session.activeConversation?.id ?? "default"}-${viewKey}`}
         settings={settings}
+        conversationId={session.activeConversation?.id ?? null}
         initialMessages={session.initialMessages}
         composerSeed={composerSeed}
         onUserMessage={handleUserMessage}

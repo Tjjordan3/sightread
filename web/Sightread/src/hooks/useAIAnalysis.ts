@@ -54,6 +54,10 @@ export function useAIAnalysis(settings: Settings) {
   const lastSpokenRef = useRef("");
   const latestResponseRef = useRef("");
   const lastFrameBlobRef = useRef<Blob | null>(null);
+  const pendingManualRef = useRef<HTMLVideoElement | null>(null);
+  const runAnalysisRef = useRef<
+    (video: HTMLVideoElement, manual: boolean) => Promise<void>
+  >(async () => {});
 
   const speakVisionResult = useCallback(
     async (result: string, manual: boolean) => {
@@ -81,18 +85,47 @@ export function useAIAnalysis(settings: Settings) {
 
   const reset = useCallback(() => {
     abortRef.current?.abort();
+    pendingManualRef.current = null;
     lastSampleMs.current = 0;
     backoffMs.current = 0;
     isProcessing.current = false;
     didShowMissingKeyError.current = false;
     lastFrameBlobRef.current = null;
+    latestResponseRef.current = "";
     stopSpeaking();
     setState(INITIAL_STATE);
   }, []);
 
+  const applyExternalResult = useCallback(
+    (result: string, blob: Blob, promptTitle: string) => {
+      latestResponseRef.current = result;
+      lastFrameBlobRef.current = blob;
+      setState((prev) => ({
+        analysisState: "idle",
+        latestResponse: result,
+        errorMessage: "",
+        ttsNeedsTap: false,
+        latestCitations: [],
+        sourcesLoading: false,
+        sourcesError: "",
+        responses: [
+          { text: result, promptTitle, timestampMs: Date.now() },
+          ...prev.responses,
+        ].slice(0, 10),
+      }));
+    },
+    [],
+  );
+
   const runAnalysis = useCallback(
     async (video: HTMLVideoElement, manual: boolean) => {
-      if (isProcessing.current) return;
+      if (isProcessing.current) {
+        if (manual) {
+          abortRef.current?.abort();
+          pendingManualRef.current = video;
+        }
+        return;
+      }
       isProcessing.current = true;
       abortRef.current?.abort();
       const controller = new AbortController();
@@ -111,8 +144,12 @@ export function useAIAnalysis(settings: Settings) {
           maxWidth: manual ? 768 : 512,
           quality: manual ? 0.75 : 0.6,
         });
+        if (controller.signal.aborted) return;
+
         lastFrameBlobRef.current = blob;
         const base64 = await blobToBase64(blob);
+        if (controller.signal.aborted) return;
+
         const service = createVisionService(settings);
         const visionPrompt = getVisionPrompt(settings);
         const result = await service.analyze(base64, visionPrompt.prompt);
@@ -156,10 +193,18 @@ export function useAIAnalysis(settings: Settings) {
         }));
       } finally {
         isProcessing.current = false;
+        const pending = pendingManualRef.current;
+        if (pending) {
+          pendingManualRef.current = null;
+          lastSampleMs.current = 0;
+          void runAnalysisRef.current(pending, true);
+        }
       }
     },
     [settings, speakVisionResult],
   );
+
+  runAnalysisRef.current = runAnalysis;
 
   const findSources = useCallback(async () => {
     const query = buildSearchQueryFromVision(latestResponseRef.current);
@@ -228,8 +273,12 @@ export function useAIAnalysis(settings: Settings) {
   const analyzeNow = useCallback(
     (video: HTMLVideoElement | null) => {
       if (!video || video.readyState < 2) return;
-      abortRef.current?.abort();
       lastSampleMs.current = 0;
+      if (isProcessing.current) {
+        abortRef.current?.abort();
+        pendingManualRef.current = video;
+        return;
+      }
       void runAnalysis(video, true);
     },
     [runAnalysis],
@@ -249,6 +298,7 @@ export function useAIAnalysis(settings: Settings) {
     replayLatest,
     findSources,
     getDiscussSnapshot,
+    applyExternalResult,
     reset,
   };
 }

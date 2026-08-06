@@ -12,12 +12,20 @@ import { ChatMessageList } from "./ChatMessageList";
 
 export interface AgentChatViewProps {
   settings: Settings;
+  conversationId?: string | null;
   initialMessages?: ChatMessage[];
   getCurrentFrame?: () => HTMLVideoElement | null;
   showLiveFrameOption?: boolean;
   onClose?: () => void;
-  onUserMessage?: (message: ChatMessage, imageBlob?: Blob) => void | Promise<void>;
-  onAssistantMessage?: (message: ChatMessage) => void | Promise<void>;
+  onUserMessage?: (
+    message: ChatMessage,
+    imageBlob?: Blob,
+    conversationId?: string,
+  ) => void | Promise<void>;
+  onAssistantMessage?: (
+    message: ChatMessage,
+    conversationId?: string,
+  ) => void | Promise<void>;
   /** Auto-seed composer when opening from Vision Discuss. */
   composerSeed?: ComposerSeed | null;
   onOpenHistory?: () => void;
@@ -31,6 +39,7 @@ export interface AgentChatViewProps {
 
 export function AgentChatView({
   settings,
+  conversationId = null,
   initialMessages = [WELCOME_MESSAGE],
   getCurrentFrame,
   showLiveFrameOption = false,
@@ -69,6 +78,7 @@ export function AgentChatView({
 
   const chat = useAgentChat({
     settings,
+    conversationId,
     getCurrentFrame,
     initialMessages,
     onUserMessage,

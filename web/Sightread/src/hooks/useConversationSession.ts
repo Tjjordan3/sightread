@@ -116,14 +116,15 @@ export function useConversationSession() {
   }, [initialMessages, refreshList]);
 
   const persistUserMessage = useCallback(
-    async (message: ChatMessage, imageBlob?: Blob) => {
-      if (!activeConversation || message.id === "welcome") return;
+    async (message: ChatMessage, imageBlob?: Blob, conversationId?: string) => {
+      const targetId = conversationId ?? activeConversation?.id;
+      if (!targetId || message.id === "welcome") return;
       let imageId: string | undefined;
       if (imageBlob) {
         imageId = createId();
         await saveImage({
           id: imageId,
-          conversationId: activeConversation.id,
+          conversationId: targetId,
           mimeType: "image/jpeg",
           blob: imageBlob,
           byteSize: imageBlob.size,
@@ -132,29 +133,32 @@ export function useConversationSession() {
       }
       await saveMessage({
         id: message.id,
-        conversationId: activeConversation.id,
+        conversationId: targetId,
         role: "user",
         text: message.text,
         createdAt: Date.now(),
         imageId,
       });
-      const conv = await getConversation(activeConversation.id);
+      const conv = await getConversation(targetId);
       if (conv && conv.title === "New chat" && message.text.trim()) {
         conv.title = titleFromFirstMessage(message.text);
         await updateConversation(conv);
-        setActiveConversation(conv);
+        setActiveConversation((current) =>
+          current?.id === targetId ? conv : current,
+        );
         setConversations(await refreshList());
       }
     },
-    [activeConversation, refreshList],
+    [activeConversation?.id, refreshList],
   );
 
   const persistAssistantMessage = useCallback(
-    async (message: ChatMessage) => {
-      if (!activeConversation) return;
+    async (message: ChatMessage, conversationId?: string) => {
+      const targetId = conversationId ?? activeConversation?.id;
+      if (!targetId) return;
       await saveMessage({
         id: message.id,
-        conversationId: activeConversation.id,
+        conversationId: targetId,
         role: "assistant",
         text: message.text,
         createdAt: Date.now(),
@@ -164,10 +168,14 @@ export function useConversationSession() {
       });
       const list = await refreshList();
       setConversations(list);
-      const updated = await getConversation(activeConversation.id);
-      if (updated) setActiveConversation(updated);
+      const updated = await getConversation(targetId);
+      if (updated) {
+        setActiveConversation((current) =>
+          current?.id === targetId ? updated : current,
+        );
+      }
     },
-    [activeConversation, refreshList],
+    [activeConversation?.id, refreshList],
   );
 
   const reloadConversations = useCallback(async () => {

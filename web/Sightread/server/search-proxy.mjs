@@ -1,45 +1,90 @@
 /**
- * Serper web search proxy — keeps SERPER_API_KEY on the server (not in the browser).
+ * Tavily web search proxy — keeps TAVILY_API_KEY on the server (not in the browser).
  * IIS rewrites /api/search -> http://127.0.0.1:8789/search
  *
- * Set environment variable: SERPER_API_KEY=your_key_from_serper.dev
+ * Set environment variable: TAVILY_API_KEY=your_key_from_app.tavily.com
  */
 import http from "node:http";
 import https from "node:https";
 
 const HOST = process.env.SEARCH_PROXY_HOST ?? "127.0.0.1";
 const PORT = Number(process.env.SEARCH_PROXY_PORT ?? 8789);
-const SERPER_API_KEY = process.env.SERPER_API_KEY ?? "";
+const TAVILY_API_KEY = process.env.TAVILY_API_KEY ?? "";
+const MAX_SEARCH_QUERY_LENGTH = 500;
+const MAX_BODY_BYTES = 8_192;
+const RATE_LIMIT_MAX = 30;
+const RATE_LIMIT_WINDOW_MS = 60_000;
 
-function readBody(req) {
+const rateBuckets = new Map();
+
+function consumeRateLimit(key) {
+  const now = Date.now();
+  const entry = rateBuckets.get(key);
+  if (!entry || now >= entry.resetAt) {
+    rateBuckets.set(key, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS });
+    return { allowed: true, retryAfterSec: 0 };
+  }
+  if (entry.count >= RATE_LIMIT_MAX) {
+    return {
+      allowed: false,
+      retryAfterSec: Math.max(1, Math.ceil((entry.resetAt - now) / 1000)),
+    };
+  }
+  entry.count += 1;
+  return { allowed: true, retryAfterSec: 0 };
+}
+
+function readBody(req, maxBytes) {
   return new Promise((resolve, reject) => {
     const chunks = [];
-    req.on("data", (chunk) => chunks.push(chunk));
+    let size = 0;
+    req.on("data", (chunk) => {
+      size += chunk.length;
+      if (size > maxBytes) {
+        reject(Object.assign(new Error("Request body too large"), { status: 413 }));
+        req.destroy();
+        return;
+      }
+      chunks.push(chunk);
+    });
     req.on("end", () => resolve(Buffer.concat(chunks)));
     req.on("error", reject);
   });
 }
 
-function writeJson(res, status, body) {
+function writeJson(res, status, body, extraHeaders = {}) {
   const payload = JSON.stringify(body);
   res.writeHead(status, {
     "Content-Type": "application/json",
     "Content-Length": Buffer.byteLength(payload),
+    ...extraHeaders,
   });
   res.end(payload);
 }
 
-function serperSearch(query, num = 5) {
+function clientKey(req) {
+  const forwarded = req.headers["x-forwarded-for"];
+  if (typeof forwarded === "string" && forwarded.trim()) {
+    return forwarded.split(",")[0].trim();
+  }
+  return req.socket.remoteAddress ?? "unknown";
+}
+
+function tavilySearch(query, num = 5) {
   return new Promise((resolve, reject) => {
-    const body = JSON.stringify({ q: query, num });
+    const body = JSON.stringify({
+      query,
+      max_results: num,
+      search_depth: "basic",
+    });
     const req = https.request(
       {
-        hostname: "google.serper.dev",
+        hostname: "api.tavily.com",
         path: "/search",
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "X-API-KEY": SERPER_API_KEY,
+          Authorization: `Bearer ${TAVILY_API_KEY}`,
           "Content-Length": Buffer.byteLength(body),
         },
       },
@@ -50,7 +95,7 @@ function serperSearch(query, num = 5) {
           const raw = Buffer.concat(chunks).toString("utf8");
           if (res.statusCode < 200 || res.statusCode >= 300) {
             console.error(
-              `Serper search failed (${res.statusCode}):`,
+              `Tavily search failed (${res.statusCode}):`,
               raw.slice(0, 500),
             );
             reject(new Error("Upstream search failed"));
@@ -85,7 +130,18 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
-  if (!SERPER_API_KEY) {
+  const rate = consumeRateLimit(`search:${clientKey(req)}`);
+  if (!rate.allowed) {
+    writeJson(
+      res,
+      429,
+      { error: "Too many requests" },
+      { "Retry-After": String(rate.retryAfterSec) },
+    );
+    return;
+  }
+
+  if (!TAVILY_API_KEY) {
     writeJson(res, 503, {
       error: "Search service unavailable",
     });
@@ -93,22 +149,33 @@ const server = http.createServer(async (req, res) => {
   }
 
   try {
-    const raw = await readBody(req);
+    const raw = await readBody(req, MAX_BODY_BYTES);
     const { query } = JSON.parse(raw.toString("utf8"));
     if (!query || typeof query !== "string" || !query.trim()) {
       writeJson(res, 400, { error: "Missing query" });
       return;
     }
+    const trimmed = query.trim();
+    if (trimmed.length > MAX_SEARCH_QUERY_LENGTH) {
+      writeJson(res, 400, {
+        error: `Query too long (max ${MAX_SEARCH_QUERY_LENGTH} characters)`,
+      });
+      return;
+    }
 
-    const data = await serperSearch(query.trim(), 5);
-    const results = (data.organic ?? []).slice(0, 5).map((item) => ({
+    const data = await tavilySearch(trimmed, 5);
+    const results = (data.results ?? []).slice(0, 5).map((item) => ({
       title: item.title ?? "",
-      url: item.link ?? "",
-      snippet: item.snippet ?? "",
+      url: item.url ?? "",
+      snippet: item.content ?? "",
     }));
 
-    writeJson(res, 200, { query: query.trim(), results });
+    writeJson(res, 200, { query: trimmed, results });
   } catch (err) {
+    if (err?.status === 413) {
+      writeJson(res, 413, { error: "Request body too large" });
+      return;
+    }
     console.error("Search proxy error:", err);
     writeJson(res, 502, {
       error: "Search service unavailable",
@@ -119,8 +186,8 @@ const server = http.createServer(async (req, res) => {
 server.listen(PORT, HOST, () => {
   console.log(`Sightread search proxy: http://${HOST}:${PORT}`);
   console.log(
-    SERPER_API_KEY
-      ? "Serper API key loaded."
-      : "WARNING: set SERPER_API_KEY environment variable.",
+    TAVILY_API_KEY
+      ? "Tavily API key loaded."
+      : "WARNING: set TAVILY_API_KEY environment variable.",
   );
 });

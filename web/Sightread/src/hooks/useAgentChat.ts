@@ -4,6 +4,7 @@ import { createChatService, type ChatMessage } from "../lib/chat";
 import { blobToBase64, captureFrameAsJpeg, fileToJpegBlob } from "../lib/imageEncoding";
 import { hasApiKeyForProvider, type Settings } from "../lib/settings";
 import { speakAsync, stopSpeaking } from "../lib/speech";
+import { revokeMessagePreviewUrls } from "../lib/storage/export";
 
 export interface PendingAttachment {
   previewUrl: string;
@@ -12,10 +13,18 @@ export interface PendingAttachment {
 
 export interface UseAgentChatOptions {
   settings: Settings;
+  conversationId?: string | null;
   getCurrentFrame?: () => HTMLVideoElement | null;
   initialMessages?: ChatMessage[];
-  onUserMessage?: (message: ChatMessage, imageBlob?: Blob) => void | Promise<void>;
-  onAssistantMessage?: (message: ChatMessage) => void | Promise<void>;
+  onUserMessage?: (
+    message: ChatMessage,
+    imageBlob?: Blob,
+    conversationId?: string,
+  ) => void | Promise<void>;
+  onAssistantMessage?: (
+    message: ChatMessage,
+    conversationId?: string,
+  ) => void | Promise<void>;
   onReplySpoken?: () => void;
   onBeforeSpeak?: () => void;
   onAfterSpeak?: () => void;
@@ -44,6 +53,7 @@ function formatChatError(err: unknown, webSearchEnabled: boolean): string {
 
 export function useAgentChat({
   settings,
+  conversationId = null,
   getCurrentFrame,
   initialMessages = [WELCOME_MESSAGE],
   onUserMessage,
@@ -61,9 +71,25 @@ export function useAgentChat({
   const [voiceConversation, setVoiceConversation] = useState(false);
   const voiceConversationRef = useRef(false);
   const messagesRef = useRef(messages);
+  const sendGenerationRef = useRef(0);
+  const conversationIdRef = useRef(conversationId);
   useEffect(() => {
     messagesRef.current = messages;
   }, [messages]);
+  useEffect(() => {
+    conversationIdRef.current = conversationId;
+  }, [conversationId]);
+
+  useEffect(() => {
+    return () => {
+      sendGenerationRef.current += 1;
+      revokeMessagePreviewUrls(messagesRef.current);
+      setPendingAttachment((prev) => {
+        if (prev) URL.revokeObjectURL(prev.previewUrl);
+        return null;
+      });
+    };
+  }, []);
 
   const clearAttachment = useCallback(() => {
     setPendingAttachment((prev) => {
@@ -114,50 +140,65 @@ export function useAgentChat({
         return;
       }
 
+      const targetConversationId = conversationIdRef.current ?? undefined;
+      const generation = ++sendGenerationRef.current;
+      const previousInput = input;
+      const previousAttachment = pendingAttachment;
+      const previousAttachLiveFrame = attachLiveFrame;
+
       setError("");
       setIsSending(true);
       setInput("");
-
-      let attachedImageBase64: string | undefined;
-      let attachedImageBytes: number | undefined;
-      let imagePreviewUrl: string | undefined;
-      let imageBlobForStore: Blob | undefined;
-
-      if (pendingAttachment) {
-        attachedImageBase64 = await blobToBase64(pendingAttachment.blob);
-        attachedImageBytes = pendingAttachment.blob.size;
-        imagePreviewUrl = pendingAttachment.previewUrl;
-        imageBlobForStore = pendingAttachment.blob;
-      } else if (attachLiveFrame && getCurrentFrame) {
-        const video = getCurrentFrame();
-        if (video && video.readyState >= 2) {
-          const blob = await captureFrameAsJpeg(video, {
-            maxWidth: 512,
-            quality: 0.6,
-          });
-          attachedImageBase64 = await blobToBase64(blob);
-          attachedImageBytes = blob.size;
-          imagePreviewUrl = URL.createObjectURL(blob);
-          imageBlobForStore = blob;
-        }
-      }
-
-      const userMessage: ChatMessage = {
-        id: createId(),
-        role: "user",
-        text: text || "What do you see in this image?",
-        imagePreviewUrl,
-        attachedImageBytes,
-      };
-      const nextMessages = [...messagesRef.current, userMessage];
-      setMessages(nextMessages);
       setPendingAttachment(null);
       setAttachLiveFrame(false);
 
+      let userMessageAdded = false;
+
       try {
-        await onUserMessage?.(userMessage, imageBlobForStore);
+        let attachedImageBase64: string | undefined;
+        let attachedImageBytes: number | undefined;
+        let imagePreviewUrl: string | undefined;
+        let imageBlobForStore: Blob | undefined;
+
+        if (previousAttachment) {
+          attachedImageBase64 = await blobToBase64(previousAttachment.blob);
+          attachedImageBytes = previousAttachment.blob.size;
+          imagePreviewUrl = previousAttachment.previewUrl;
+          imageBlobForStore = previousAttachment.blob;
+        } else if (previousAttachLiveFrame && getCurrentFrame) {
+          const video = getCurrentFrame();
+          if (video && video.readyState >= 2) {
+            const blob = await captureFrameAsJpeg(video, {
+              maxWidth: 512,
+              quality: 0.6,
+            });
+            attachedImageBase64 = await blobToBase64(blob);
+            attachedImageBytes = blob.size;
+            imagePreviewUrl = URL.createObjectURL(blob);
+            imageBlobForStore = blob;
+          }
+        }
+
+        if (generation !== sendGenerationRef.current) return;
+
+        const userMessage: ChatMessage = {
+          id: createId(),
+          role: "user",
+          text: text || "What do you see in this image?",
+          imagePreviewUrl,
+          attachedImageBytes,
+        };
+        const nextMessages = [...messagesRef.current, userMessage];
+        setMessages(nextMessages);
+        userMessageAdded = true;
+
+        await onUserMessage?.(userMessage, imageBlobForStore, targetConversationId);
+        if (generation !== sendGenerationRef.current) return;
+
         const service = createChatService(settings);
         const reply = await service.chat(nextMessages, attachedImageBase64);
+        if (generation !== sendGenerationRef.current) return;
+
         const assistantMessage: ChatMessage = {
           id: createId(),
           role: "assistant",
@@ -165,7 +206,7 @@ export function useAgentChat({
           citations: reply.citations,
         };
         setMessages((prev) => [...prev, assistantMessage]);
-        await onAssistantMessage?.(assistantMessage);
+        await onAssistantMessage?.(assistantMessage, targetConversationId);
 
         if (settings.speakChatReplies || voiceConversationRef.current) {
           onBeforeSpeak?.();
@@ -176,13 +217,19 @@ export function useAgentChat({
           onReplySpoken?.();
         }
       } catch (err) {
+        if (generation !== sendGenerationRef.current) return;
         setError(formatChatError(err, settings.webSearchEnabled));
+        if (!userMessageAdded && previousInput) {
+          setInput(previousInput);
+        }
         if (voiceConversationRef.current) {
           voiceConversationRef.current = false;
           setVoiceConversation(false);
         }
       } finally {
-        setIsSending(false);
+        if (generation === sendGenerationRef.current) {
+          setIsSending(false);
+        }
       }
     },
     [
@@ -213,6 +260,7 @@ export function useAgentChat({
   }, []);
 
   const replaceMessages = useCallback((next: ChatMessage[]) => {
+    revokeMessagePreviewUrls(messagesRef.current);
     setMessages(next);
     setInput("");
     clearAttachment();

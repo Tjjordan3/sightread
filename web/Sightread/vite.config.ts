@@ -11,7 +11,7 @@ export default defineConfig({
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api\/nvidia/, ""),
       },
-      // Local dev only — run `npm run search-proxy` with SERPER_API_KEY set,
+      // Local dev only — run `npm run search-proxy` with TAVILY_API_KEY set,
       // or use `npm run pages:dev` to exercise Cloudflare Functions locally.
       "/api/search": {
         target: "http://127.0.0.1:8789",
@@ -60,4 +60,8 @@ export default defineConfig({
       },
     }),
   ],
+  test: {
+    environment: "node",
+    include: ["src/**/*.test.ts"],
+  },
 });

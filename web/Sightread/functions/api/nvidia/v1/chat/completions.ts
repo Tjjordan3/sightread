@@ -1,16 +1,38 @@
+import {
+  MAX_NVIDIA_BODY_BYTES,
+  NVIDIA_RATE_LIMIT,
+  clientRateLimitKey,
+  consumeRateLimit,
+  isSameOriginRequest,
+} from "../../_lib/guards";
+
 const UPSTREAM = "https://integrate.api.nvidia.com/v1/chat/completions";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-  "Access-Control-Allow-Headers": "authorization, content-type",
-};
-
 export const onRequestOptions: PagesFunction = async () => {
-  return new Response(null, { status: 204, headers: corsHeaders });
+  // Same-origin SPA does not need CORS; reject cross-origin preflights.
+  return new Response(null, { status: 204 });
 };
 
 export const onRequestPost: PagesFunction = async (context) => {
+  if (!isSameOriginRequest(context.request)) {
+    return Response.json({ error: { message: "Forbidden" } }, { status: 403 });
+  }
+
+  const rate = consumeRateLimit(
+    clientRateLimitKey(context.request, "nvidia"),
+    NVIDIA_RATE_LIMIT.max,
+    NVIDIA_RATE_LIMIT.windowMs,
+  );
+  if (!rate.allowed) {
+    return Response.json(
+      { error: { message: "Too many requests" } },
+      {
+        status: 429,
+        headers: { "Retry-After": String(rate.retryAfterSec) },
+      },
+    );
+  }
+
   const authorization = context.request.headers.get("Authorization");
   if (!authorization) {
     return Response.json(
@@ -19,8 +41,23 @@ export const onRequestPost: PagesFunction = async (context) => {
     );
   }
 
+  const contentLength = Number(context.request.headers.get("Content-Length") ?? 0);
+  if (contentLength > MAX_NVIDIA_BODY_BYTES) {
+    return Response.json(
+      { error: { message: "Request body too large" } },
+      { status: 413 },
+    );
+  }
+
   try {
-    const body = await context.request.text();
+    const body = await context.request.arrayBuffer();
+    if (body.byteLength > MAX_NVIDIA_BODY_BYTES) {
+      return Response.json(
+        { error: { message: "Request body too large" } },
+        { status: 413 },
+      );
+    }
+
     const upstream = await fetch(UPSTREAM, {
       method: "POST",
       headers: {
@@ -34,11 +71,15 @@ export const onRequestPost: PagesFunction = async (context) => {
     return new Response(responseBody, {
       status: upstream.status,
       headers: {
-        "Content-Type": upstream.headers.get("Content-Type") ?? "application/json",
+        "Content-Type":
+          upstream.headers.get("Content-Type") ?? "application/json",
       },
     });
   } catch (err) {
-    const message = err instanceof Error ? err.message : "Proxy error";
-    return Response.json({ error: { message: `Upstream error: ${message}` } }, { status: 502 });
+    console.error("NVIDIA proxy upstream error:", err);
+    return Response.json(
+      { error: { message: "Upstream error" } },
+      { status: 502 },
+    );
   }
 };

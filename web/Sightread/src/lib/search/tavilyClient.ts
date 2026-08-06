@@ -19,7 +19,7 @@ export async function webSearch(query: string): Promise<SearchCitation[]> {
     });
   } catch {
     throw new VisionAIError(
-      "Could not reach the search proxy. Run scripts\\start-search-proxy.cmd on the server with SERPER_API_KEY set.",
+      "Could not reach the search proxy. Run scripts\\start-search-proxy.cmd on the server with TAVILY_API_KEY set.",
     );
   }
 
