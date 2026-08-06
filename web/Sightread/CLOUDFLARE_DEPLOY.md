@@ -15,6 +15,28 @@ Search and NVIDIA POSTs are **same-origin only**, with per-IP rate limits and bo
 
 ---
 
+## After every production deploy
+
+1. Confirm the Pages build for `main` is green in the Cloudflare dashboard.
+2. Ensure the **Tavily** secret is set (web search returns 503 without it):
+
+```bash
+cd web/Sightread
+npx wrangler pages secret put TAVILY_API_KEY --project-name=sightread
+```
+
+3. If you previously used Serper, delete `SERPER_API_KEY` from Pages secrets — it is unused.
+4. Smoke-test:
+
+```bash
+curl https://<your-project>.pages.dev/api/search
+curl https://<your-project>.pages.dev/api/nvidia/v1/health
+```
+
+`GET /api/search` should return `{ "ok": true, ... }`. Agent web search should return results (not 503) once `TAVILY_API_KEY` is present.
+
+---
+
 ## Prerequisites
 
 - [Cloudflare account](https://dash.cloudflare.com/)
