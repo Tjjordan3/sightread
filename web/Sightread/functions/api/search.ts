@@ -1,10 +1,21 @@
 /**
  * Cloudflare Pages Function: Tavily search proxy
- * Replaces Serper for production. Handles: POST /api/search
+ * Handles: POST /api/search
  *
- * Add in Cloudflare Dashboard → Settings → Environment variables:
+ * Secret (Cloudflare Dashboard → Settings → Environment variables):
  *   TAVILY_API_KEY = your key from app.tavily.com  (mark as Secret)
+ *
+ * Locked to same-origin requests with per-IP rate limiting so the server
+ * key cannot be burned from arbitrary websites.
  */
+
+import {
+  SEARCH_RATE_LIMIT,
+  clientRateLimitKey,
+  consumeRateLimit,
+  isSameOriginRequest,
+  validateSearchQuery,
+} from "./_lib/guards";
 
 interface Env {
   TAVILY_API_KEY: string;
@@ -14,14 +25,8 @@ export const onRequest: PagesFunction<Env> = async (context) => {
   const { request, env } = context;
 
   if (request.method === "OPTIONS") {
-    return new Response(null, {
-      status: 204,
-      headers: {
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Methods": "POST, OPTIONS",
-        "Access-Control-Allow-Headers": "content-type",
-      },
-    });
+    // Same-origin SPA does not need CORS; reject cross-origin preflights.
+    return new Response(null, { status: 204 });
   }
 
   if (request.method === "GET") {
@@ -30,6 +35,25 @@ export const onRequest: PagesFunction<Env> = async (context) => {
 
   if (request.method !== "POST") {
     return new Response("POST /api/search", { status: 405 });
+  }
+
+  if (!isSameOriginRequest(request)) {
+    return Response.json({ error: "Forbidden" }, { status: 403 });
+  }
+
+  const rate = consumeRateLimit(
+    clientRateLimitKey(request, "search"),
+    SEARCH_RATE_LIMIT.max,
+    SEARCH_RATE_LIMIT.windowMs,
+  );
+  if (!rate.allowed) {
+    return Response.json(
+      { error: "Too many requests" },
+      {
+        status: 429,
+        headers: { "Retry-After": String(rate.retryAfterSec) },
+      },
+    );
   }
 
   if (!env.TAVILY_API_KEY) {
@@ -46,9 +70,10 @@ export const onRequest: PagesFunction<Env> = async (context) => {
     return Response.json({ error: "Invalid JSON body" }, { status: 400 });
   }
 
-  const { query } = body as { query?: string };
-  if (!query || typeof query !== "string" || !query.trim()) {
-    return Response.json({ error: "Missing query" }, { status: 400 });
+  const { query: rawQuery } = body as { query?: string };
+  const validated = validateSearchQuery(rawQuery);
+  if (!validated.ok) {
+    return Response.json({ error: validated.error }, { status: 400 });
   }
 
   let tavilyResponse: Response;
@@ -60,7 +85,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
         Authorization: `Bearer ${env.TAVILY_API_KEY}`,
       },
       body: JSON.stringify({
-        query: query.trim(),
+        query: validated.query,
         max_results: 5,
         search_depth: "basic",
       }),
@@ -102,8 +127,5 @@ export const onRequest: PagesFunction<Env> = async (context) => {
     snippet: item.content ?? "",
   }));
 
-  return Response.json(
-    { query: query.trim(), results },
-    { headers: { "Access-Control-Allow-Origin": "*" } },
-  );
+  return Response.json({ query: validated.query, results });
 };

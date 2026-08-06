@@ -1,5 +1,6 @@
 import { openDB, type DBSchema, type IDBPDatabase } from "idb";
 import { createId } from "../uuid";
+import { nextMessageCountAfterSave } from "./messageCount";
 import type { StoredConversation, StoredImage, StoredMessage } from "./types";
 import { STORAGE_LIMITS } from "./types";
 
@@ -59,6 +60,9 @@ function getDb() {
 
         db.createObjectStore("meta");
       },
+    }).catch((err) => {
+      dbPromise = null;
+      throw err;
     });
   }
   return dbPromise;
@@ -147,6 +151,7 @@ export async function saveMessage(message: StoredMessage): Promise<void> {
     "by-conversation",
     message.conversationId,
   );
+  let removed = 0;
   if (count >= STORAGE_LIMITS.maxMessagesPerConversation) {
     const existing = await db.getAllFromIndex(
       "messages",
@@ -158,6 +163,7 @@ export async function saveMessage(message: StoredMessage): Promise<void> {
       0,
       sorted.length - STORAGE_LIMITS.maxMessagesPerConversation + 1,
     );
+    removed = toRemove.length;
     for (const old of toRemove) {
       await db.delete("messages", old.id);
       if (old.imageId) await db.delete("images", old.imageId);
@@ -167,7 +173,7 @@ export async function saveMessage(message: StoredMessage): Promise<void> {
   const conversation = await db.get("conversations", message.conversationId);
   if (conversation) {
     conversation.updatedAt = Date.now();
-    conversation.messageCount += 1;
+    conversation.messageCount = nextMessageCountAfterSave(count, removed);
     await db.put("conversations", conversation);
   }
 }

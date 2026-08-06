@@ -21,14 +21,22 @@ export function StreamScreen({
   onDiscussInAgent,
 }: StreamScreenProps) {
   const { videoRef, status, error, start, stop } = useWebcam();
-  const { state, processFrame, analyzeNow, replayLatest, findSources, getDiscussSnapshot, reset } =
-    useAIAnalysis(settings);
+  const {
+    state,
+    processFrame,
+    analyzeNow,
+    replayLatest,
+    findSources,
+    getDiscussSnapshot,
+    applyExternalResult,
+    reset,
+  } = useAIAnalysis(settings);
   const [showChat, setShowChat] = useState(false);
   const [uploadError, setUploadError] = useState("");
-  const [uploadResult, setUploadResult] = useState<string | null>(null);
-  const uploadBlobRef = useRef<Blob | null>(null);
+  const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const rafRef = useRef<number>(0);
+  const uploadGenerationRef = useRef(0);
 
   useEffect(() => {
     void start();
@@ -62,8 +70,9 @@ export function StreamScreen({
 
   const handleUpload = async (file: File) => {
     unlockSpeech();
+    const generation = ++uploadGenerationRef.current;
     setUploadError("");
-    setUploadResult(null);
+    setUploading(true);
     try {
       const img = new Image();
       const url = URL.createObjectURL(file);
@@ -76,44 +85,40 @@ export function StreamScreen({
         maxWidth: 768,
         quality: 0.75,
       });
-      uploadBlobRef.current = blob;
       URL.revokeObjectURL(url);
+      if (generation !== uploadGenerationRef.current) return;
+
       const base64 = await blobToBase64(blob);
       const service = createVisionService(settings);
       const visionPrompt = getVisionPrompt(settings);
       const result = await service.analyze(base64, visionPrompt.prompt);
-      setUploadResult(result);
+      if (generation !== uploadGenerationRef.current) return;
+
+      applyExternalResult(result, blob, `${visionPrompt.title} (upload)`);
       if (settings.isTTSEnabled) {
         void speakAsync(result, { force: true });
       }
     } catch (err) {
+      if (generation !== uploadGenerationRef.current) return;
       setUploadError(
         err instanceof Error ? err.message : "Image analysis failed.",
       );
+    } finally {
+      if (generation === uploadGenerationRef.current) {
+        setUploading(false);
+      }
     }
   };
 
   const handleDiscuss = (mode: VisionDiscussMode) => {
     const snapshot = getDiscussSnapshot();
-    const description = uploadResult ?? snapshot?.description ?? "";
-    const blob = uploadBlobRef.current ?? snapshot?.blob;
-    if (!description.trim() || !blob) return;
+    if (!snapshot) return;
     onDiscussInAgent({
-      description,
-      blob,
+      description: snapshot.description,
+      blob: snapshot.blob,
       mode,
     });
   };
-
-  const displayState =
-    uploadResult != null
-      ? {
-          ...state,
-          latestResponse: uploadResult,
-          analysisState: "idle" as const,
-          errorMessage: "",
-        }
-      : state;
 
   return (
     <div className="stream-screen">
@@ -144,6 +149,7 @@ export function StreamScreen({
             <button
               type="button"
               className="icon-button"
+              disabled={uploading}
               onClick={() => {
                 unlockSpeech();
                 fileInputRef.current?.click();
@@ -173,15 +179,15 @@ export function StreamScreen({
 
         {status === "live" && (
           <AIResponsePanel
-            aiState={displayState}
+            aiState={state}
             promptTitle={getVisionPrompt(settings).title}
             ttsEnabled={settings.isTTSEnabled}
             manualOnly={settings.visionManualOnly}
             webSearchEnabled={settings.webSearchEnabled}
-            citations={displayState.latestCitations}
-            sourcesLoading={displayState.sourcesLoading}
-            sourcesError={displayState.sourcesError}
-            canDiscuss={displayState.latestResponse.length > 0}
+            citations={state.latestCitations}
+            sourcesLoading={state.sourcesLoading}
+            sourcesError={state.sourcesError}
+            canDiscuss={state.latestResponse.length > 0}
             onReadAloud={settings.isTTSEnabled ? handleReadAloud : undefined}
             onFindSources={() => void findSources()}
             onDiscuss={handleDiscuss}
@@ -192,10 +198,9 @@ export function StreamScreen({
           <button
             type="button"
             className="btn btn--secondary"
-            disabled={status !== "live"}
+            disabled={status !== "live" || uploading}
             onClick={() => {
               unlockSpeech();
-              setUploadResult(null);
               analyzeNow(videoRef.current);
             }}
           >

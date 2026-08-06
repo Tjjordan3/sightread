@@ -8,6 +8,8 @@
     "dev": "node scripts/create-icons.mjs && vite",
     "build": "node scripts/create-icons.mjs && tsc -b && vite build",
     "lint": "eslint .",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "nvidia-proxy": "node server/nvidia-proxy.mjs",
     "search-proxy": "node server/search-proxy.mjs",
     "pages:dev": "npm run build && wrangler pages dev dist",
@@ -35,6 +37,7 @@
     "typescript": "~6.0.2",
     "typescript-eslint": "^8.59.2",
     "vite": "^8.0.12",
+    "vitest": "^4.1.10",
     "wrangler": "^4.24.0"
   }
 }

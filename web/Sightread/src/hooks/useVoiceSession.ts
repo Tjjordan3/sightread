@@ -39,8 +39,19 @@ export function useVoiceSession({
 }: UseVoiceSessionOptions) {
   const [speaking, setSpeaking] = useState(false);
   const transcriptBuffer = useRef("");
+  const pendingCommitRef = useRef<string | null>(null);
   const silenceTimer = useRef<number | null>(null);
   const wakeArmed = useRef(false);
+  const isSendingRef = useRef(isSending);
+  const onTranscriptCommitRef = useRef(onTranscriptCommit);
+
+  useEffect(() => {
+    isSendingRef.current = isSending;
+  }, [isSending]);
+
+  useEffect(() => {
+    onTranscriptCommitRef.current = onTranscriptCommit;
+  }, [onTranscriptCommit]);
 
   const phase: VoiceSessionPhase = speaking
     ? "speaking"
@@ -57,6 +68,22 @@ export function useVoiceSession({
     }
   }, []);
 
+  const deliverCommit = useCallback((text: string) => {
+    if (isSendingRef.current) {
+      pendingCommitRef.current = text;
+      return;
+    }
+    onTranscriptCommitRef.current(text);
+  }, []);
+
+  useEffect(() => {
+    if (isSending) return;
+    const pending = pendingCommitRef.current;
+    if (!pending) return;
+    pendingCommitRef.current = null;
+    onTranscriptCommitRef.current(pending);
+  }, [isSending]);
+
   const commitBuffer = useCallback(() => {
     clearSilenceTimer();
     const raw = transcriptBuffer.current.trim();
@@ -69,12 +96,12 @@ export function useVoiceSession({
       wakeArmed.current = false;
       const text = command || raw;
       if (!text) return;
-      onTranscriptCommit(text);
+      deliverCommit(text);
       return;
     }
 
-    onTranscriptCommit(raw);
-  }, [clearSilenceTimer, onTranscriptCommit, settings.wakeWordEnabled]);
+    deliverCommit(raw);
+  }, [clearSilenceTimer, deliverCommit, settings.wakeWordEnabled]);
 
   const scheduleSilenceCommit = useCallback(() => {
     clearSilenceTimer();
@@ -117,7 +144,7 @@ export function useVoiceSession({
         if (triggered) {
           wakeArmed.current = true;
           if (command) {
-            onTranscriptCommit(command);
+            deliverCommit(command);
             return;
           }
         } else if (!wakeArmed.current && settings.alwaysListening) {
@@ -132,11 +159,11 @@ export function useVoiceSession({
       }
 
       onInterimTranscript(text);
-      onTranscriptCommit(text);
+      deliverCommit(text);
     },
     [
+      deliverCommit,
       onInterimTranscript,
-      onTranscriptCommit,
       scheduleSilenceCommit,
       settings.alwaysListening,
       settings.wakeWordEnabled,
@@ -187,6 +214,7 @@ export function useVoiceSession({
     onStopVoiceConversation();
     wakeArmed.current = false;
     transcriptBuffer.current = "";
+    pendingCommitRef.current = null;
     clearSilenceTimer();
     stopListening();
     setSpeaking(false);
