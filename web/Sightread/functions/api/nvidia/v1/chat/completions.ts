@@ -4,7 +4,7 @@ import {
   clientRateLimitKey,
   consumeRateLimit,
   isSameOriginRequest,
-} from "../../_lib/guards";
+} from "../../../_lib/guards";
 
 const UPSTREAM = "https://integrate.api.nvidia.com/v1/chat/completions";
 
