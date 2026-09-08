@@ -211,6 +211,6 @@ private struct CameraSourcePicker: View {
   }
 }
 
-// Replace this with PhotosPicker once we're on iOS 16 or newer
+// PhotosPicker is available (deployment target iOS 17+); keep UIImagePicker for MockDeviceKit simplicity
 
 #endif

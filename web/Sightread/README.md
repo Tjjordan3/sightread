@@ -33,7 +33,7 @@ Browser-based AI agent and vision companion for Sightread. Works as a Meta AI–
 
 ### Shared
 - Same prompt presets as iOS/Android
-- API keys in `localStorage` / Capacitor Preferences (on-device only); chat calls go to your chosen provider
+- API keys in `localStorage` on web; **Capacitor Preferences** on native shells (hydrated on launch); chat calls go to your chosen provider
 - Optional server `GEMINI_API_KEY` for Tier-1 scene extraction (recommended for Capacitor builds)
 - **Light / dark / auto theme** — matches system appearance when set to Auto
 
@@ -102,7 +102,7 @@ Run the proxy as a Windows Service or Scheduled Task at startup so it survives r
 
 | Data | Location |
 |------|----------|
-| API keys & settings | `localStorage` |
+| API keys & settings | `localStorage` (web); Capacitor Preferences (native shells) |
 | Conversations & images | IndexedDB (`sightread` database) |
 
 Use **Settings → Clear all chat history** to wipe conversations. API keys are kept unless you clear them manually.
@@ -121,4 +121,4 @@ HTTPS required for camera/mic in production (localhost exempt).
 
 ## Roadmap
 
-See [docs/WEB_ROADMAP.md](../../docs/WEB_ROADMAP.md) for architecture notes. Core roadmap items are implemented in this branch; future work may include JSON import and cloud sync.
+See [docs/WEB_ROADMAP.md](../../docs/WEB_ROADMAP.md) for shipped status and remaining follow-ups (JSON import, cloud sync). Product Phase 3–5 workstreams: [docs/PRODUCT_ROADMAP.md](../../docs/PRODUCT_ROADMAP.md).
