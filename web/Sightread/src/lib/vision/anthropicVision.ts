@@ -1,6 +1,6 @@
 import { VisionAIError, type VisionAIService } from "./types";
 
-const MODEL = "claude-3-5-haiku-latest";
+const MODEL = "claude-haiku-4-5";
 
 export function createAnthropicVisionService(apiKey: string): VisionAIService {
   return {

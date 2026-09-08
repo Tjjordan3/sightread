@@ -1,6 +1,6 @@
 import { VisionAIError, type VisionAIService } from "./types";
 
-const MODEL = "gemini-2.0-flash";
+const MODEL = "gemini-3.5-flash";
 
 export function createGeminiVisionService(apiKey: string): VisionAIService {
   return {

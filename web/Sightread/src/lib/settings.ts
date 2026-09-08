@@ -12,6 +12,7 @@ import {
 import type { ThemeSetting } from "./theme";
 import {
   SETTINGS_STORAGE_KEY,
+  readSettingsRaw,
   readSettingsRawSync,
   writeSettingsRawSync,
 } from "./capacitor/preferencesStore";
@@ -50,7 +51,7 @@ export interface Settings {
 const DEFAULTS: Settings = {
   provider: "gemini",
   theme: "auto",
-  openrouterModel: "google/gemini-2.0-flash-001",
+  openrouterModel: "google/gemini-3.5-flash",
   nvidiaModel: "meta/llama-3.2-11b-vision-instruct",
   promptMode: "auto",
   selectedPromptId: "scene",
@@ -123,8 +124,14 @@ function parseSettings(raw: string | null): Settings {
   }
 }
 
+/** Sync load from localStorage (web + first paint). Prefer {@link loadSettingsAsync} on native. */
 export function loadSettings(): Settings {
   return parseSettings(readSettingsRawSync());
+}
+
+/** Async load: Capacitor Preferences on native shells, localStorage on web. */
+export async function loadSettingsAsync(): Promise<Settings> {
+  return parseSettings(await readSettingsRaw());
 }
 
 export function saveSettings(settings: Settings): void {

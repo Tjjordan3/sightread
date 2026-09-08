@@ -13,7 +13,7 @@ class GeminiVisionService(private val apiKey: String) : VisionAIService {
         require(apiKey.isNotBlank()) { "Add a Gemini API key in Settings." }
         val base64 = Base64.encodeToString(jpegData, Base64.NO_WRAP)
         val url =
-            "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${java.net.URLEncoder.encode(apiKey, "UTF-8")}"
+            "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${java.net.URLEncoder.encode(apiKey, "UTF-8")}"
         val body =
             JSONObject()
                 .put(

@@ -2,7 +2,7 @@ import { buildTranscript, type ChatMessage, type ChatOptions } from "./types";
 import { buildAgentSystemPrompt } from "./systemPrompt";
 import { VisionAIError } from "../vision/types";
 
-const MODEL = "claude-3-5-haiku-latest";
+const MODEL = "claude-haiku-4-5";
 
 export function createAnthropicChatService(apiKey: string) {
   return {

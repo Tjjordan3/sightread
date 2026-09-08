@@ -148,7 +148,7 @@ class SettingsRepository(context: Context) {
     private const val KEY_SEARCH_PROXY_URL = "search_proxy_url"
     private const val KEY_ONBOARDING_COMPLETE = "onboarding_complete"
 
-    const val DEFAULT_OPENROUTER_MODEL = "google/gemini-2.0-flash-001"
+    const val DEFAULT_OPENROUTER_MODEL = "google/gemini-3.5-flash"
     const val DEFAULT_NVIDIA_MODEL = "meta/llama-3.2-11b-vision-instruct"
     const val MIN_INTERVAL = 5
     const val MAX_INTERVAL = 30

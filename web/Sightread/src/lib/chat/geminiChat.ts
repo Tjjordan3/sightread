@@ -2,7 +2,7 @@ import { buildTranscript, type ChatMessage, type ChatOptions } from "./types";
 import { buildAgentSystemPrompt } from "./systemPrompt";
 import { VisionAIError } from "../vision/types";
 
-const MODEL = "gemini-2.0-flash";
+const MODEL = "gemini-3.5-flash";
 
 export function createGeminiChatService(apiKey: string) {
   return {
