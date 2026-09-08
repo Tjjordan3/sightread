@@ -1,13 +1,19 @@
-import { buildTranscript, type ChatMessage } from "./types";
+import { buildTranscript, type ChatMessage, type ChatOptions } from "./types";
+import { buildAgentSystemPrompt } from "./systemPrompt";
 import { VisionAIError } from "../vision/types";
 
 const MODEL = "gemini-2.0-flash";
 
 export function createGeminiChatService(apiKey: string) {
   return {
-    async chat(messages: ChatMessage[], attachedImageBase64?: string): Promise<string> {
+    async chat(
+      messages: ChatMessage[],
+      attachedImageBase64?: string,
+      options?: ChatOptions,
+    ): Promise<string> {
       if (!apiKey.trim()) throw new VisionAIError("Add API key in Settings.");
 
+      const systemPrompt = buildAgentSystemPrompt(options?.sceneContext);
       const parts: Array<Record<string, unknown>> = [
         { text: buildTranscript(messages) },
       ];
@@ -24,7 +30,10 @@ export function createGeminiChatService(apiKey: string) {
       const response = await fetch(url, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ contents: [{ parts }] }),
+        body: JSON.stringify({
+          system_instruction: { parts: [{ text: systemPrompt }] },
+          contents: [{ parts }],
+        }),
       });
 
       const data = await response.json();

@@ -237,6 +237,37 @@ export function SettingsScreen({
         </label>
 
         <label className="switch-row">
+          <span>Tier-1 scene JSON extraction (Gemini 3.5 Flash-Lite)</span>
+          <input
+            type="checkbox"
+            checked={settings.sceneExtractionEnabled}
+            onChange={(e) =>
+              onUpdate({ sceneExtractionEnabled: e.target.checked })
+            }
+          />
+        </label>
+        <p className="footnote">
+          Asynchronous structured scene state for the Agent system prompt. Prefer
+          a server <code>GEMINI_API_KEY</code> Pages secret; otherwise uses your
+          Gemini key (BYOK).
+        </p>
+
+        <label className="switch-row">
+          <span>Spatial audio cues for TTS</span>
+          <input
+            type="checkbox"
+            checked={settings.spatialAudioEnabled}
+            onChange={(e) => {
+              onUpdate({ spatialAudioEnabled: e.target.checked });
+              if (e.target.checked) unlockSpeech();
+            }}
+          />
+        </label>
+        <p className="footnote">
+          Plays a brief HRTF cue toward scene objects/hazards before speaking.
+        </p>
+
+        <label className="switch-row">
           <span>Smart prompts (recommended)</span>
           <input
             type="checkbox"

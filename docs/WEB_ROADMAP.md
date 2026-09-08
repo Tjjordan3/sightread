@@ -4,6 +4,8 @@ Plan for evolving `web/Sightread` into a fuller Meta AI–style browser experien
 
 **Status:** Core items below are implemented on the web branch (persistence, export, PWA shell, voice v2, “Hey Sightread” wake phrase).
 
+**Also shipped:** Two-tier vision scaffold (Gemini 3.5 Flash-Lite scene JSON → Agent system prompt), Capacitor iOS/Android shells, native TTS + spatial audio modules, `/api/vision/scene` with rate limits. See [ARCHITECTURE_VISION.md](./ARCHITECTURE_VISION.md).
+
 This document covers three workstreams:
 
 1. **Conversation history persistence**

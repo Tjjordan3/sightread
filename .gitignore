@@ -2,6 +2,15 @@
 ios/**/DerivedData/
 ios/**/*.xcuserstate
 ios/**/xcuserdata/
+web/Sightread/ios/**/DerivedData/
+web/Sightread/ios/**/*.xcuserstate
+web/Sightread/ios/**/xcuserdata/
+web/Sightread/ios/App/Pods/
+
+# Capacitor / Android local
+web/Sightread/android/.gradle/
+web/Sightread/android/**/build/
+web/Sightread/android/local.properties
 
 # Secrets
 .env

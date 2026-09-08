@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Sightread</string>
+    <string name="title_activity_main">Sightread</string>
+    <string name="package_name">com.sightread.app</string>
+    <string name="custom_url_scheme">com.sightread.app</string>
+</resources>

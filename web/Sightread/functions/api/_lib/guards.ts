@@ -2,8 +2,12 @@
 
 export const MAX_SEARCH_QUERY_LENGTH = 500;
 export const MAX_NVIDIA_BODY_BYTES = 4 * 1024 * 1024;
+/** ~1.5 MB JSON body allowance for base64 JPEG scene frames. */
+export const MAX_VISION_BODY_BYTES = 1.5 * 1024 * 1024;
+export const MAX_VISION_IMAGE_BASE64_CHARS = 1_400_000;
 export const SEARCH_RATE_LIMIT = { max: 30, windowMs: 60_000 } as const;
 export const NVIDIA_RATE_LIMIT = { max: 60, windowMs: 60_000 } as const;
+export const VISION_RATE_LIMIT = { max: 20, windowMs: 60_000 } as const;
 
 const rateBuckets = new Map<string, { count: number; resetAt: number }>();
 

@@ -2,8 +2,9 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { createId } from "../lib/uuid";
 import { createChatService, type ChatMessage } from "../lib/chat";
 import { blobToBase64, captureFrameAsJpeg, fileToJpegBlob } from "../lib/imageEncoding";
+import { getLatestScene } from "../lib/scene/sceneStore";
 import { hasApiKeyForProvider, type Settings } from "../lib/settings";
-import { speakAsync, stopSpeaking } from "../lib/speech";
+import { speakAccessible, stopAccessibleSpeech } from "../lib/audio/tts";
 import { revokeMessagePreviewUrls } from "../lib/storage/export";
 
 export interface PendingAttachment {
@@ -196,7 +197,9 @@ export function useAgentChat({
         if (generation !== sendGenerationRef.current) return;
 
         const service = createChatService(settings);
-        const reply = await service.chat(nextMessages, attachedImageBase64);
+        const reply = await service.chat(nextMessages, attachedImageBase64, {
+          sceneContext: getLatestScene(),
+        });
         if (generation !== sendGenerationRef.current) return;
 
         const assistantMessage: ChatMessage = {
@@ -210,7 +213,9 @@ export function useAgentChat({
 
         if (settings.speakChatReplies || voiceConversationRef.current) {
           onBeforeSpeak?.();
-          await speakAsync(reply.text);
+          await speakAccessible(reply.text, {
+            spatialAudioEnabled: settings.spatialAudioEnabled,
+          });
           onAfterSpeak?.();
         }
         if (voiceConversationRef.current) {
@@ -250,13 +255,13 @@ export function useAgentChat({
   const startVoiceConversation = useCallback(() => {
     voiceConversationRef.current = true;
     setVoiceConversation(true);
-    stopSpeaking();
+    stopAccessibleSpeech();
   }, []);
 
   const stopVoiceConversation = useCallback(() => {
     voiceConversationRef.current = false;
     setVoiceConversation(false);
-    stopSpeaking();
+    stopAccessibleSpeech();
   }, []);
 
   const replaceMessages = useCallback((next: ChatMessage[]) => {

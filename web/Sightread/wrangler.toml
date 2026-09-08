@@ -6,5 +6,10 @@ pages_build_output_dir = "dist"
 # Set it as a secret (never commit the value):
 #   npx wrangler pages secret put TAVILY_API_KEY --project-name=sightread
 #
+# GEMINI_API_KEY (optional) powers Tier-1 /api/vision/scene without shipping
+# keys in the Capacitor/web client. If unset, clients may send BYOK via
+# Authorization: Bearer <key>.
+#   npx wrangler pages secret put GEMINI_API_KEY --project-name=sightread
+#
 # NVIDIA requests are proxied with the user's own API key in the Authorization header;
 # no server-side NVIDIA secret is needed.

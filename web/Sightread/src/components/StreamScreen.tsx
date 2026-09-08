@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { useAIAnalysis } from "../hooks/useAIAnalysis";
+import { useSceneExtraction } from "../hooks/useSceneExtraction";
 import { useWebcam } from "../hooks/useSettings";
+import { speakAccessible, unlockAccessibleSpeech } from "../lib/audio/tts";
 import { blobToBase64, captureFrameAsJpeg } from "../lib/imageEncoding";
 import { getVisionPrompt, type Settings } from "../lib/settings";
-import { speakAsync, unlockSpeech } from "../lib/speech";
 import { createVisionService } from "../lib/vision";
 import type { VisionDiscussHandoff, VisionDiscussMode } from "../lib/visionDiscuss";
 import { AIResponsePanel } from "./AIResponsePanel";
@@ -31,6 +32,17 @@ export function StreamScreen({
     applyExternalResult,
     reset,
   } = useAIAnalysis(settings);
+  const sceneExtraction = useSceneExtraction(settings, {
+    enabled: settings.sceneExtractionEnabled,
+  });
+  const {
+    processFrame: processSceneFrame,
+    extractNow: extractSceneNow,
+    reset: resetScene,
+    scene: latestScene,
+    extracting: sceneExtracting,
+    error: sceneError,
+  } = sceneExtraction;
   const [showChat, setShowChat] = useState(false);
   const [uploadError, setUploadError] = useState("");
   const [uploading, setUploading] = useState(false);
@@ -43,33 +55,36 @@ export function StreamScreen({
     return () => {
       cancelAnimationFrame(rafRef.current);
       reset();
+      resetScene();
       stop();
     };
-  }, [reset, start, stop]);
+  }, [reset, resetScene, start, stop]);
 
   useEffect(() => {
     const tick = () => {
       processFrame(videoRef.current);
+      processSceneFrame(videoRef.current);
       rafRef.current = requestAnimationFrame(tick);
     };
     if (status === "live") {
       rafRef.current = requestAnimationFrame(tick);
     }
     return () => cancelAnimationFrame(rafRef.current);
-  }, [processFrame, status, videoRef]);
+  }, [processFrame, processSceneFrame, status, videoRef]);
 
   const handleStop = () => {
     reset();
+    resetScene();
     stop();
   };
 
   const handleReadAloud = () => {
-    unlockSpeech();
+    unlockAccessibleSpeech();
     void replayLatest();
   };
 
   const handleUpload = async (file: File) => {
-    unlockSpeech();
+    unlockAccessibleSpeech();
     const generation = ++uploadGenerationRef.current;
     setUploadError("");
     setUploading(true);
@@ -96,7 +111,10 @@ export function StreamScreen({
 
       applyExternalResult(result, blob, `${visionPrompt.title} (upload)`);
       if (settings.isTTSEnabled) {
-        void speakAsync(result, { force: true });
+        void speakAccessible(result, {
+          force: true,
+          spatialAudioEnabled: settings.spatialAudioEnabled,
+        });
       }
     } catch (err) {
       if (generation !== uploadGenerationRef.current) return;
@@ -151,7 +169,7 @@ export function StreamScreen({
               className="icon-button"
               disabled={uploading}
               onClick={() => {
-                unlockSpeech();
+                unlockAccessibleSpeech();
                 fileInputRef.current?.click();
               }}
               aria-label="Upload photo"
@@ -177,6 +195,24 @@ export function StreamScreen({
           </div>
         </div>
 
+        {status === "live" && settings.sceneExtractionEnabled && (
+          <div
+            className="stream-screen__banner"
+            aria-live="polite"
+            style={{ opacity: 0.92 }}
+          >
+            {sceneExtracting
+              ? "Scene JSON: extracting…"
+              : latestScene
+                ? `Scene JSON: ${latestScene.summary.slice(0, 120)}${
+                    latestScene.summary.length > 120 ? "…" : ""
+                  }`
+                : sceneError
+                  ? `Scene JSON error: ${sceneError}`
+                  : "Scene JSON: waiting for first frame…"}
+          </div>
+        )}
+
         {status === "live" && (
           <AIResponsePanel
             aiState={state}
@@ -200,8 +236,11 @@ export function StreamScreen({
             className="btn btn--secondary"
             disabled={status !== "live" || uploading}
             onClick={() => {
-              unlockSpeech();
+              unlockAccessibleSpeech();
               analyzeNow(videoRef.current);
+              if (videoRef.current && settings.sceneExtractionEnabled) {
+                void extractSceneNow(videoRef.current);
+              }
             }}
           >
             Analyze now

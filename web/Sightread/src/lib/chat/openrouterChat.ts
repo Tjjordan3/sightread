@@ -1,4 +1,5 @@
-import { buildTranscript, type ChatMessage } from "./types";
+import { buildTranscript, type ChatMessage, type ChatOptions } from "./types";
+import { buildAgentSystemPrompt } from "./systemPrompt";
 import { VisionAIError } from "../vision/types";
 
 export function createOpenRouterChatService(
@@ -6,7 +7,11 @@ export function createOpenRouterChatService(
   model: string,
 ) {
   return {
-    async chat(messages: ChatMessage[], attachedImageBase64?: string): Promise<string> {
+    async chat(
+      messages: ChatMessage[],
+      attachedImageBase64?: string,
+      options?: ChatOptions,
+    ): Promise<string> {
       if (!apiKey.trim()) throw new VisionAIError("Add API key in Settings.");
 
       const content: Array<Record<string, unknown>> = [
@@ -32,7 +37,10 @@ export function createOpenRouterChatService(
         body: JSON.stringify({
           model,
           max_tokens: 400,
-          messages: [{ role: "user", content }],
+          messages: [
+            { role: "system", content: buildAgentSystemPrompt(options?.sceneContext) },
+            { role: "user", content },
+          ],
         }),
       });
 
