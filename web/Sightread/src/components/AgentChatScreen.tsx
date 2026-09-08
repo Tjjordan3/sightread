@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
 import { useConversationSession } from "../hooks/useConversationSession";
 import type { ChatMessage } from "../lib/chat";
-import { hasOnboarded, markOnboarded } from "../lib/onboarding";
-import { hasApiKeyForProvider, type Settings } from "../lib/settings";
+import { hasOnboarded } from "../lib/onboarding";
+import type { Settings } from "../lib/settings";
 import type { VisionDiscussHandoff } from "../lib/visionDiscuss";
 import { AgentChatView } from "./AgentChatView";
-import { ChatOnboardingOverlay } from "./ChatOnboardingOverlay";
 import { ConversationList } from "./ConversationList";
+import { WelcomeScreen } from "./WelcomeScreen";
 
 export interface ComposerSeed {
   id: number;
@@ -28,7 +28,7 @@ export function ChatEmptyBrandedHeader() {
         width={44}
         height={42}
       />
-      <h2 className="chat-empty-brand__wordmark">SightRead</h2>
+      <h2 className="chat-empty-brand__wordmark">Sightread</h2>
       <p className="chat-empty-brand__tagline">Your AI that sees what you see</p>
     </div>
   );
@@ -38,8 +38,6 @@ interface AgentChatScreenProps {
   settings: Settings;
   discussHandoff?: VisionDiscussHandoff | null;
   onDiscussHandoffConsumed?: () => void;
-  onUpdateSettings: (patch: Partial<Settings>) => void;
-  onOpenSettings: () => void;
 }
 
 function buildDiscussSeedText(description: string): string {
@@ -50,8 +48,6 @@ export function AgentChatScreen({
   settings,
   discussHandoff = null,
   onDiscussHandoffConsumed,
-  onUpdateSettings,
-  onOpenSettings,
 }: AgentChatScreenProps) {
   const session = useConversationSession();
   const [showHistory, setShowHistory] = useState(false);
@@ -62,21 +58,11 @@ export function AgentChatScreen({
     hasUserMessages(session.initialMessages),
   );
 
-  const needsOnboarding =
-    !onboardingDismissed &&
-    !hasOnboarded() &&
-    !hasApiKeyForProvider(settings);
+  const needsOnboarding = !onboardingDismissed && !hasOnboarded();
 
   useEffect(() => {
     setBrandingHidden(hasUserMessages(session.initialMessages));
   }, [session.activeConversation?.id, session.initialMessages]);
-
-  useEffect(() => {
-    if (hasApiKeyForProvider(settings) && !hasOnboarded()) {
-      markOnboarded();
-      setOnboardingDismissed(true);
-    }
-  }, [settings]);
 
   const showBrandedHeader = !brandingHidden;
 
@@ -128,12 +114,7 @@ export function AgentChatScreen({
   if (needsOnboarding) {
     return (
       <div className="screen agent-chat-screen agent-chat-screen--onboarding">
-        <ChatOnboardingOverlay
-          settings={settings}
-          onUpdateSettings={onUpdateSettings}
-          onOpenSettings={onOpenSettings}
-          onComplete={() => setOnboardingDismissed(true)}
-        />
+        <WelcomeScreen onComplete={() => setOnboardingDismissed(true)} />
       </div>
     );
   }

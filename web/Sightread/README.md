@@ -45,9 +45,12 @@ npm install
 npm run dev
 ```
 
-1. **Settings** → pick a provider and add its API key
+1. First launch shows a brand welcome — tap **Get started** (no API key required)
 2. **Agent** tab → chat, history, photos, or voice
-3. **Vision** tab → live webcam analysis + scene JSON
+3. **Settings** → pick a provider and add its API key when you’re ready
+4. **Vision** tab → live webcam analysis + scene JSON
+
+API keys live only in Settings; the welcome screen never asks for them.
 
 ### Capacitor (iOS / Android shells)
 

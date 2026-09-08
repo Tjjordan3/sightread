@@ -28,8 +28,6 @@ function App() {
         settings={settings}
         discussHandoff={discussHandoff}
         onDiscussHandoffConsumed={() => setDiscussHandoff(null)}
-        onUpdateSettings={updateSettings}
-        onOpenSettings={() => setTab("settings")}
       />
     ) : tab === "vision" ? (
       <StreamScreen
