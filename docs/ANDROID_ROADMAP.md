@@ -2,13 +2,17 @@
 
 Plan for bringing `android/Sightread` to feature and security parity with `web/Sightread`.
 
-**Status:** Agent-first pivot implemented — app opens to Agent tab; phone camera vision default; glasses optional in Settings. Remaining: web search client, PDF export, wake phrase.
+**Status (2026-09):** Agent-first pivot and P0–P3 core parity are **implemented** — app opens to Agent; phone camera vision default; glasses optional in Settings; encrypted keys; Room persistence; 7 providers; STT; theme; JSON export.
+
+**Remaining:** wire web-search client to chat, PDF/Markdown export parity, wake phrase, Tier-1 scene extraction (web-only today), DAT SDK 0.9 Camera API migration.
+
+See also [PRODUCT_ROADMAP.md](./PRODUCT_ROADMAP.md) and [ARCHITECTURE_VISION.md](./ARCHITECTURE_VISION.md).
 
 ---
 
-## Product focus (web parity pivot)
+## Product focus (web parity pivot) — DONE
 
-Android now matches the web app's **Agent-first** model:
+Android matches the web app's **Agent-first** model:
 
 ```
 Launch → Agent tab (default)
@@ -35,60 +39,49 @@ Key files: `MainAppScaffold.kt`, `VisionTabScreen.kt`, `PhoneVisionScreen.kt`, `
 
 ---
 
-## Current baseline
+## Current baseline (shipped)
 
-| Area | Android today | Web target |
-|------|---------------|------------|
-| AI providers | Gemini, OpenAI, Groq | + Anthropic, Mistral, OpenRouter, NVIDIA |
-| Chat | Ephemeral bottom sheet | Persistent Agent tab with conversation history |
-| Navigation | DAT state machine only | Agent / Vision / Settings tabs when registered |
-| API key storage | Plain `SharedPreferences` | Masked UI; encrypted at rest on native |
-| Voice input | None | STT + optional wake phrase |
-| Export | None | JSON / Markdown / PDF |
-| Web search | None | Server proxy (`/api/search`) |
-| Theme | Fixed Material | Light / dark / system |
+| Area | Android today | Web |
+|------|---------------|-----|
+| AI providers | Gemini, OpenAI, Groq, Anthropic, Mistral, OpenRouter, NVIDIA | Same 7 |
+| Chat | Agent tab + Room persistence | Agent + IndexedDB |
+| Navigation | Agent / Vision / Settings (glasses optional) | Same tabs |
+| API key storage | EncryptedSharedPreferences | localStorage / Capacitor Preferences |
+| Voice input | Push-to-talk STT | STT + wake phrase |
+| Export | JSON (Markdown helper exists; UI JSON-first) | JSON / Markdown / PDF |
+| Web search | Proxy URL in Settings; **client not wired into ChatService** | `/api/search` proxy |
+| Theme | Light / dark / system | Same |
+| Tier-1 scene JSON | **Not ported** | Gemini 3.5 Flash-Lite |
 
 ---
 
 ## Feature gap matrix
 
-### P0 — Core parity
+### Done (was P0–P3)
 
-| Item | Web reference | Android work |
-|------|---------------|--------------|
-| Encrypted API keys | iOS `KeychainStore.swift` | `SecureSettingsStore` + `EncryptedSharedPreferences` |
-| Password-masked key fields | `SettingsScreen.tsx` | `PasswordVisualTransformation` |
-| Conversation persistence | `lib/storage/conversationStore.ts` | Room DB + `ConversationRepository` |
-| Multi-conversation UI | `ConversationList.tsx` | `ConversationListSheet` |
-| Agent / Vision / Settings tabs | `AppShell.tsx` | `AppShell.kt` + `RegisteredAppScaffold` |
-| HTTPS-only networking | `public/_headers` (CSP) | `network_security_config.xml` + OkHttp timeouts |
+| Item | Status |
+|------|--------|
+| Encrypted API keys + masked fields | Done |
+| Conversation persistence + multi-convo UI | Done |
+| Agent / Vision / Settings tabs | Done |
+| HTTPS-only + OkHttp timeouts | Done |
+| 7 providers + model pickers | Done |
+| Vision → Agent handoff | Done |
+| Speech input (push-to-talk) | Done |
+| Theme + onboarding | Done |
+| Export JSON | Done |
 
-### P1 — Provider & settings parity
+### Remaining
 
-| Item | Web reference | Android work |
-|------|---------------|--------------|
-| Anthropic, Mistral, OpenRouter, NVIDIA | `lib/providers.ts` | New vision + chat service classes |
-| OpenRouter / NVIDIA model pickers | `settings.ts` | `SettingsRepository` fields + UI |
-| `visionManualOnly` | Settings toggle | Gate auto-analysis in `AIAnalysisController` |
-| `speakChatReplies` | Separate from vision TTS | Split toggles in Settings |
-| Clear chat history | `clearChatHistory()` | Settings action |
-| Vision → Agent handoff | `visionDiscuss.ts` | "Discuss in Agent" on stream screen |
-
-### P2 — Voice & search
-
-| Item | Web reference | Android work |
-|------|---------------|--------------|
-| Speech input (push-to-talk) | `useSpeechRecognition.ts` | `SpeechRecognizer` + `RECORD_AUDIO` |
-| Always listening / wake phrase | `wakeWord.ts` | Deferred — battery-sensitive |
-| Web search | `/api/search` proxy | Configurable proxy URL in Settings |
-
-### P3 — Polish
-
-| Item | Web reference | Android work |
-|------|---------------|--------------|
-| Export conversations | `lib/storage/export.ts` | Share intent (JSON / Markdown) |
-| Onboarding overlay | `ChatOnboardingOverlay.tsx` | First-run sheet |
-| Theme (light/dark/auto) | `useTheme.ts` | `ThemeSetting` + Compose theme |
+| Item | Notes |
+|------|-------|
+| Web search in chat | Settings proxy URL exists; wire `ChatService` like web `/api/search` |
+| PDF / Markdown export UI | Share JSON today; add Markdown/PDF parity |
+| Always-listening / wake phrase | Deferred — battery-sensitive |
+| Tier-1 scene extraction | Port web `/api/vision/scene` client or call Pages Function |
+| Remove dead `ChatScreen` / `ChatViewModel` | Leftover pre-Agent path |
+| androidTest package rename | Still under `cameraaccess` sample package |
+| DAT SDK → 0.9.0 | Breaking: `addStream` → `addCamera`; see PRODUCT_ROADMAP |
 
 ### Out of scope
 
@@ -98,7 +91,7 @@ Key files: `MainAppScaffold.kt`, `VisionTabScreen.kt`, `PhoneVisionScreen.kt`, `
 
 ---
 
-## Security targets
+## Security (shipped)
 
 ```
 ┌─────────────────────────────────────────────────────┐
@@ -109,87 +102,18 @@ Key files: `MainAppScaffold.kt`, `VisionTabScreen.kt`, `PhoneVisionScreen.kt`, `
 ├─────────────────────────────────────────────────────┤
 │  OkHttp + network_security_config (HTTPS only)       │
 ├─────────────────────────────────────────────────────┤
-│  Room DB (conversations — on-device, no cloud)     │
+│  Room DB (conversations — on-device, no cloud)       │
 └─────────────────────────────────────────────────────┘
 ```
 
 | Control | Status |
 |---------|--------|
-| `allowBackup="false"` | Already set |
-| Encrypted API keys | Phase 1 |
-| OkHttp with timeouts | Phase 1 |
-| Cleartext traffic blocked | Phase 1 |
-| ProGuard keep rules | Phase 1 |
+| `allowBackup="false"` | Done |
+| Encrypted API keys | Done (`security-crypto` 1.1.0) |
+| OkHttp with timeouts | Done |
+| Cleartext traffic blocked | Done |
+| ProGuard keep rules | Done |
 | Release signing (non-sample) | Documented; CI later |
-
----
-
-## Proposed package layout
-
-```
-sightread/
-├── ai/           # Vision services, settings, prompts
-├── chat/         # Agent chat ViewModel + ChatService
-├── network/      # OkHttp ApiClient
-├── storage/      # Room entities, DAO, repository, export
-├── speech/       # TTS + STT
-└── ui/           # Compose screens, AppShell, theme
-```
-
----
-
-## Phased implementation
-
-### Phase 1 — Security foundation
-
-1. `androidx.security:security-crypto` — `SecureSettingsStore`
-2. Migrate API keys from plain prefs (one-time migration)
-3. Mask API key fields in Settings
-4. `network_security_config.xml` — block cleartext
-5. OkHttp replaces `HttpURLConnection` in all AI clients
-6. ProGuard rules for Room, JSON, DAT SDK
-
-### Phase 2 — Agent experience & persistence
-
-1. Room entities mirroring web `StoredConversation` / `StoredMessage`
-2. `ConversationRepository` with limits: 50 convos, 200 msgs, 100 MB images
-3. `AppShell` bottom nav: Agent | Vision | Settings
-4. `AgentChatScreen` with conversation list sheet
-5. Vision → Agent handoff
-6. Clear all conversations in Settings
-
-### Phase 3 — Provider expansion
-
-1. Extend `AIProvider` to 7 providers
-2. Port Anthropic, Mistral, OpenRouter, NVIDIA vision + chat clients
-3. Model pickers for OpenRouter and NVIDIA
-4. `visionManualOnly`, `speakChatReplies` toggles
-
-### Phase 4 — Voice input
-
-1. `RECORD_AUDIO` permission
-2. Push-to-talk mic button in Agent chat
-3. (Later) always-listening + "Hey Sightread"
-
-### Phase 5 — Export, search, polish
-
-1. Export JSON / Markdown via share intent
-2. Configurable web search proxy URL
-3. Onboarding overlay
-4. Light / dark / system theme
-
----
-
-## Data model (aligned with web)
-
-| Web (`types.ts`) | Android (Room) |
-|------------------|----------------|
-| `StoredConversation` | `ConversationEntity` |
-| `StoredMessage` | `MessageEntity` |
-| `StoredImage` | `ImageEntity` |
-| `STORAGE_LIMITS` | `StorageLimits` object |
-
-Settings remain in `SharedPreferences` / encrypted store — not per-conversation.
 
 ---
 
@@ -221,12 +145,15 @@ DAT registration is optional via Settings → Connect glasses.
 - [x] Shared vision frame for Agent attach
 - [x] Onboarding dialog on first launch
 - [ ] PDF export
+- [ ] Web search client wired to chat
 - [ ] Always-listening / wake phrase
+- [ ] Tier-1 scene JSON parity with web
 
 ---
 
 ## Related docs
 
 - [Web roadmap](./WEB_ROADMAP.md)
+- [Product roadmap (Phase 3–5)](./PRODUCT_ROADMAP.md)
 - [Android README](../android/Sightread/README.md)
 - [Setup](./SETUP.md)

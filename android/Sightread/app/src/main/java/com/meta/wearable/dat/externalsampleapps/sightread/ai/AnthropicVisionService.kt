@@ -14,7 +14,7 @@ class AnthropicVisionService(private val apiKey: String) : VisionAIService {
         val base64 = Base64.encodeToString(jpegData, Base64.NO_WRAP)
         val body =
             JSONObject()
-                .put("model", "claude-3-5-haiku-latest")
+                .put("model", "claude-haiku-4-5")
                 .put("max_tokens", 300)
                 .put(
                     "messages",

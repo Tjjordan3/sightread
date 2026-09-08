@@ -88,7 +88,7 @@ class ChatViewModel(private val settings: SettingsRepository) : ViewModel() {
     require(apiKey.isNotBlank()) { "Add a Gemini API key in Settings." }
     val url =
         URL(
-            "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=$apiKey"
+            "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=$apiKey"
         )
 
     val parts = JSONArray().put(JSONObject().put("text", transcript))

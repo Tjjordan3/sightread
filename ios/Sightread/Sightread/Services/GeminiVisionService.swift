@@ -2,7 +2,7 @@ import Foundation
 
 struct GeminiVisionService: VisionAIService {
   let apiKey: String
-  private let model = "gemini-2.0-flash"
+  private let model = "gemini-3.5-flash"
 
   func analyze(jpegData: Data, prompt: String) async throws -> String {
     guard !apiKey.isEmpty else { throw VisionAIError.missingAPIKey }

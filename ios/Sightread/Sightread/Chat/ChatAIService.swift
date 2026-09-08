@@ -31,7 +31,7 @@ private func buildTranscript(messages: [ChatMessage]) -> String {
 
 struct GeminiChatService: ChatAIService {
   let apiKey: String
-  private let model = "gemini-2.0-flash"
+  private let model = "gemini-3.5-flash"
 
   func chat(messages: [ChatMessage], attachedImage: UIImage?) async throws -> String {
     guard !apiKey.isEmpty else { throw VisionAIError.missingAPIKey }

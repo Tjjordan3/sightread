@@ -1,12 +1,24 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   loadSettings,
+  loadSettingsAsync,
   saveSettings,
   type Settings,
 } from "../lib/settings";
 
 export function useSettings() {
   const [settings, setSettingsState] = useState<Settings>(() => loadSettings());
+
+  // Hydrate from Capacitor Preferences on native (sync localStorage may be empty/stale).
+  useEffect(() => {
+    let cancelled = false;
+    void loadSettingsAsync().then((loaded) => {
+      if (!cancelled) setSettingsState(loaded);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const setSettings = useCallback((next: Settings) => {
     setSettingsState(next);

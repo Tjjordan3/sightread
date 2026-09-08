@@ -4,13 +4,13 @@
 
 - Camera streaming from Ray-Ban Meta (Gen 1/2) through DAT SDK
 - Best-effort streaming target: **720p / 30 FPS** (may auto-adjust based on Bluetooth bandwidth)
-- Throttled vision AI (Gemini 2.0 Flash default, OpenAI GPT-4o-mini or Groq Llama 4 Scout fallback)
+- Throttled vision AI (Gemini 3.5 Flash default, OpenAI GPT-4o-mini or Groq Llama 4 Scout fallback)
 - **Two-tier web/Capacitor pipeline** — Gemini 3.5 Flash-Lite JSON scene extraction + conversational system-prompt injection ([docs/ARCHITECTURE_VISION.md](docs/ARCHITECTURE_VISION.md))
 - Live AI response panel during streaming
-- In-app **Chat** with optional “attach current frame”
+- In-app **Chat** / **Agent** with optional “attach current frame”
 - Prompt presets (scene, navigation, accessibility, safety, shopping, social)
 - Mock Device Kit for development without wearing glasses
-- API keys stored in iOS Keychain
+- API keys stored in iOS Keychain / Android EncryptedSharedPreferences / web localStorage (Capacitor Preferences on native shells)
 
 ## Quick start
 
@@ -23,11 +23,13 @@
 
 ```
 sightread/
-  docs/              Setup, developer mode, sample prompts, architecture
+  docs/              Setup, developer mode, sample prompts, architecture, roadmaps
   ios/Sightread/     Xcode project (SwiftUI + DAT SDK 0.7) — glasses path
-  android/Sightread/ Gradle project (Compose + DAT SDK 0.7) — glasses path
+  android/Sightread/ Gradle project (Compose + DAT SDK 0.7) — glasses + Agent path
   web/Sightread/     Browser + Capacitor companion (Vite + React + webcam)
 ```
+
+**Track ownership:** DAT native apps own Ray-Ban Meta glasses streaming; Capacitor (`com.sightread.app`) owns the phone/browser Agent + Vision product. See [docs/ARCHITECTURE_VISION.md](docs/ARCHITECTURE_VISION.md).
 
 ### Android (DAT)
 
@@ -42,13 +44,13 @@ sightread/
 3. Use the **Agent** tab for Meta AI–style chat or **Vision** for live webcam + scene JSON.
 4. Mobile shells: `npm run cap:sync` then `npm run cap:android` / `npm run cap:ios`.
 
-See [web/Sightread/README.md](web/Sightread/README.md) and [docs/ARCHITECTURE_VISION.md](docs/ARCHITECTURE_VISION.md).
+Shipped on web: conversation persistence (IndexedDB), voice modes + “Hey Sightread”, PWA install shell, export (JSON/Markdown/PDF). Remaining follow-ups: [docs/WEB_ROADMAP.md](docs/WEB_ROADMAP.md). Product Phase 3–5 workstreams: [docs/PRODUCT_ROADMAP.md](docs/PRODUCT_ROADMAP.md).
 
-Upcoming web work (persistence, voice, PWA): [docs/WEB_ROADMAP.md](docs/WEB_ROADMAP.md).
+See [web/Sightread/README.md](web/Sightread/README.md) and [docs/ARCHITECTURE_VISION.md](docs/ARCHITECTURE_VISION.md).
 
 ## Requirements
 
-- iPhone, iOS 16+, Xcode 15+
+- iPhone, **iOS 17.0+**, **Xcode 15+**
 - Meta AI app v254+, Ray-Ban Meta firmware v20+
 - Google AI Studio (Gemini), OpenAI, and/or Groq API key
 
@@ -56,8 +58,8 @@ Upcoming web work (persistence, voice, PWA): [docs/WEB_ROADMAP.md](docs/WEB_ROAD
 
 Sightread does **not** require AI keys at build time. Add keys in-app:
 - iOS: **Settings** → paste Gemini/OpenAI/Groq keys (stored in Keychain)
-- Android: **AI Settings** → paste keys (stored on-device)
-- Web / Capacitor: **Settings** → paste keys (localStorage / Preferences)
+- Android: **Settings** → paste keys (EncryptedSharedPreferences)
+- Web / Capacitor: **Settings** → paste keys (localStorage; Capacitor Preferences on native shells)
 - Optional server: Cloudflare Pages secret `GEMINI_API_KEY` for Tier-1 scene extraction
 
 ## License

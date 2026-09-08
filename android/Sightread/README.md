@@ -37,7 +37,8 @@ No registration gate — the app opens directly to Agent.
 - Discuss in Agent from vision (phone or glasses)
 - Voice input (push-to-talk), TTS for vision and chat
 - Light / dark / system theme
-- Export conversations as JSON
+- Export conversations as JSON (Markdown helper present; PDF parity tracked)
+- See [docs/PRODUCT_ROADMAP.md](../../docs/PRODUCT_ROADMAP.md) for Phase 3–5 workstreams
 
 ## Security
 

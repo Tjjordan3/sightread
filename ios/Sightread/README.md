@@ -1,51 +1,56 @@
-# Sightread App
+# Sightread (iOS · DAT)
 
-A sample iOS application demonstrating integration with Meta Wearables Device Access Toolkit. This app showcases streaming video from Meta AI glasses, capturing photos, and managing connection states.
+SwiftUI app for **Ray-Ban Meta glasses** via Meta Wearables Device Access Toolkit (DAT SDK **0.7.0**). This is the glasses streaming path — separate from the Capacitor phone shell in `web/Sightread`.
 
 ## Features
 
-- Connect to Meta AI glasses
-- Stream camera feed from the device
-- Capture photos from glasses
-- Share captured photos
-- Open firmware and glasses app update flows when required
+- Connect to Meta AI glasses (registration + permissions)
+- Stream camera feed (~720p / 30 FPS best-effort)
+- Capture and share photos from glasses
+- Throttled vision AI (Gemini 3.5 Flash default; OpenAI GPT-4o-mini / Groq Llama 4 Scout)
+- In-app chat with optional attach-current-frame
+- Prompt presets (scene, navigation, accessibility, safety, shopping, social)
+- Mock Device Kit for development without wearing glasses
+- API keys in iOS Keychain
+- Firmware / glasses-app update flows when required
 
 ## Prerequisites
 
-- iOS 17.0+
-- Xcode 14.0+
-- Swift 5.0+
-- Meta Wearables Device Access Toolkit (included as a dependency)
-- A Meta AI glasses device for testing (optional for development)
+- **iOS 17.0+**
+- **Xcode 15+**
+- Swift 5+
+- Meta Wearables DAT SDK 0.7.0 (SPM)
+- Meta AI app with Developer Mode; Ray-Ban Meta glasses for device testing (optional with Mock Device Kit)
 
-## Building the app
+## Building
 
-### Using Xcode
+1. Clone this repository and open `Sightread.xcodeproj` in Xcode.
+2. Set your **Development Team** under Signing & Capabilities.
+3. Follow [docs/SETUP.md](../../docs/SETUP.md) for Developer Mode and API keys.
+4. Build and run on a **physical iPhone** (`Cmd+R`).
 
-1. Clone this repository
-1. Open the project in Xcode
-1. Select your target device
-1. Click the "Build" button or press `Cmd+B` to build the project
-1. To run the app, click the "Run" button (▶️) or press `Cmd+R`
+## Running
 
-## Running the app
+1. Turn **Developer Mode** on in the Meta AI app.
+2. Launch Sightread and complete **Connect** / registration.
+3. Once connected, the glasses camera stream appears.
+4. Use on-screen controls to capture photos, open chat, or disconnect.
+5. If prompted, tap **Update firmware** or **Update app on glasses**.
 
-1. Turn 'Developer Mode' on in the Meta AI app.
-1. Launch the app.
-1. Press the "Connect" button to complete app registration.
-1. Once connected, the camera stream from the device will be displayed
-1. Use the on-screen controls to:
-   - Capture photos
-   - View and save captured photos
-   - Disconnect from the device
-1. If a firmware update is required, tap "Update firmware" from the connection screen.
-1. If session start reports that the app on the glasses is outdated, tap "Update app on glasses" from the connection screen.
+## Track ownership
+
+| Surface | Role |
+|---------|------|
+| This app (`ios/Sightread`) | Glasses streaming + vision/chat on DAT |
+| `android/Sightread` | Glasses + Agent-first phone camera parity |
+| `web/Sightread` (Capacitor) | Phone/browser Agent, Tier-1 scene JSON, PWA |
+
+See [docs/ARCHITECTURE_VISION.md](../../docs/ARCHITECTURE_VISION.md). DAT **0.8+ / 0.9** require a Camera API migration (`addStream` → `addCamera`); tracked in [docs/PRODUCT_ROADMAP.md](../../docs/PRODUCT_ROADMAP.md).
 
 ## Troubleshooting
 
-For issues related to the Meta Wearables Device Access Toolkit, please refer to the [developer documentation](https://wearables.developer.meta.com/docs/develop/) or visit our [discussions forum](https://github.com/facebook/meta-wearables-dat-ios/discussions)
+For DAT SDK issues, see the [Meta Wearables docs](https://wearables.developer.meta.com/docs/develop/) or [iOS discussions](https://github.com/facebook/meta-wearables-dat-ios/discussions).
 
 ## License
 
-Licensed under the [MIT License](../../LICENSE) in the repository root. Portions
-are derived from Meta's CameraAccess sample; see [NOTICE](../../NOTICE).
+Licensed under the [MIT License](../../LICENSE) in the repository root. Portions are derived from Meta's CameraAccess sample; see [NOTICE](../../NOTICE).

@@ -122,7 +122,7 @@ export function SettingsScreen({
               type="text"
               value={settings.openrouterModel}
               onChange={(e) => onUpdate({ openrouterModel: e.target.value })}
-              placeholder="google/gemini-2.0-flash-001"
+              placeholder="google/gemini-3.5-flash"
             />
           </label>
         )}

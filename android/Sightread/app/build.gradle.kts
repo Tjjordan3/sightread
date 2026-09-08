@@ -15,14 +15,14 @@ plugins {
 
 android {
   namespace = "com.meta.wearable.dat.externalsampleapps.sightread"
-  compileSdk = 35
+  compileSdk = 36
 
   buildFeatures { buildConfig = true }
 
   defaultConfig {
     applicationId = "com.meta.wearable.dat.externalsampleapps.sightread"
     minSdk = 31
-    targetSdk = 34
+    targetSdk = 36
     versionCode = 1
     versionName = "1.0"
 

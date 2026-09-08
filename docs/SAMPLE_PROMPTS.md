@@ -26,7 +26,7 @@ How many people are in view and describe the general scene context. Do not ident
 
 - Use **Analyze now** for an immediate high-detail snapshot.
 - Lower the analysis interval only when plugged in; streaming uses Bluetooth bandwidth.
-- Gemini Flash is the default for cost and free-tier access; switch to OpenAI or Groq in Settings if needed.
+- Gemini 3.5 Flash is the default for cost and free-tier access; switch to OpenAI or Groq in Settings if needed. Tier-1 scene JSON (web) uses Gemini 3.5 Flash-Lite.
 
 ---
 

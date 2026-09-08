@@ -40,7 +40,7 @@ class ChatService(private val settings: SettingsRepository) {
     val apiKey = settings.geminiApiKey
     require(apiKey.isNotBlank()) { "Add a Gemini API key in Settings." }
     val url =
-        "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${java.net.URLEncoder.encode(apiKey, "UTF-8")}"
+        "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${java.net.URLEncoder.encode(apiKey, "UTF-8")}"
     val parts = JSONArray().put(JSONObject().put("text", transcript))
     imageBytes?.let { jpeg ->
       val base64 = Base64.encodeToString(jpeg, Base64.NO_WRAP)
@@ -142,7 +142,7 @@ class ChatService(private val settings: SettingsRepository) {
     }
     val body =
         JSONObject()
-            .put("model", "claude-3-5-haiku-latest")
+            .put("model", "claude-haiku-4-5")
             .put("max_tokens", 400)
             .put("messages", JSONArray().put(JSONObject().put("role", "user").put("content", content)))
             .toString()
