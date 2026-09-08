@@ -2,7 +2,7 @@ import { useCallback, useRef, useState } from "react";
 import { blobToBase64, captureFrameAsJpeg } from "../lib/imageEncoding";
 import { webSearch, type SearchCitation } from "../lib/search/tavilyClient";
 import { getVisionPrompt, hasApiKeyForProvider, type Settings } from "../lib/settings";
-import { isSpeechUnlocked, speakAsync, stopSpeaking } from "../lib/speech";
+import { isSpeechUnlocked, speakAccessible, stopAccessibleSpeech } from "../lib/audio/tts";
 import { createVisionService } from "../lib/vision";
 
 export type AnalysisState = "idle" | "running" | "error";
@@ -72,9 +72,12 @@ export function useAIAnalysis(settings: Settings) {
 
       lastSpokenRef.current = result;
       setState((prev) => ({ ...prev, ttsNeedsTap: false }));
-      await speakAsync(result, { force: manual });
+      await speakAccessible(result, {
+        force: manual,
+        spatialAudioEnabled: settings.spatialAudioEnabled,
+      });
     },
-    [settings.isTTSEnabled],
+    [settings.isTTSEnabled, settings.spatialAudioEnabled],
   );
 
   const replayLatest = useCallback(async () => {
@@ -92,7 +95,7 @@ export function useAIAnalysis(settings: Settings) {
     didShowMissingKeyError.current = false;
     lastFrameBlobRef.current = null;
     latestResponseRef.current = "";
-    stopSpeaking();
+    stopAccessibleSpeech();
     setState(INITIAL_STATE);
   }, []);
 

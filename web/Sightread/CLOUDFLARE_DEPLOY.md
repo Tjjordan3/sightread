@@ -8,10 +8,12 @@ Sightread ships as a static Vite build with **Pages Functions** for server-side 
 | `GET /api/nvidia/v1/health` | Health check for NVIDIA proxy |
 | `POST /api/search` | Tavily web search (keeps `TAVILY_API_KEY` off the client) |
 | `GET /api/search` | Search proxy health / config status |
+| `POST /api/vision/scene` | Tier-1 Gemini 3.5 Flash-Lite JSON scene extraction |
+| `GET /api/vision/scene` | Vision proxy health / `serverKeyConfigured` |
 
 Everything else is static assets from `dist/`.
 
-Search and NVIDIA POSTs are **same-origin only**, with per-IP rate limits and body/query size caps.
+Search, NVIDIA, and vision POSTs are **same-origin only**, with per-IP rate limits and body/query size caps. Vision does **not** log image payloads or API keys.
 
 ---
 
@@ -25,15 +27,24 @@ cd web/Sightread
 npx wrangler pages secret put TAVILY_API_KEY --project-name=sightread
 ```
 
-3. If you previously used Serper, delete `SERPER_API_KEY` from Pages secrets — it is unused.
-4. Smoke-test:
+3. (Recommended) Set **Gemini** for Tier-1 scene extraction so Capacitor builds need not embed a key:
+
+```bash
+npx wrangler pages secret put GEMINI_API_KEY --project-name=sightread
+```
+
+If unset, clients may send `Authorization: Bearer <gemini-key>` (BYOK).
+
+4. If you previously used Serper, delete `SERPER_API_KEY` from Pages secrets — it is unused.
+5. Smoke-test:
 
 ```bash
 curl https://<your-project>.pages.dev/api/search
 curl https://<your-project>.pages.dev/api/nvidia/v1/health
+curl https://<your-project>.pages.dev/api/vision/scene
 ```
 
-`GET /api/search` should return `{ "ok": true, ... }`. Agent web search should return results (not 503) once `TAVILY_API_KEY` is present.
+`GET /api/search` should return `{ "ok": true, ... }`. `GET /api/vision/scene` reports `serverKeyConfigured`. Agent web search should return results (not 503) once `TAVILY_API_KEY` is present.
 
 ---
 

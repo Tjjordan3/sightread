@@ -5,7 +5,7 @@ import { InstallPrompt } from "./components/InstallPrompt";
 import { InsecureContextBanner } from "./components/InsecureContextBanner";
 import { SettingsScreen } from "./components/SettingsScreen";
 import { StreamScreen } from "./components/StreamScreen";
-import { unlockSpeech } from "./lib/speech";
+import { unlockAccessibleSpeech } from "./lib/audio/tts";
 import type { VisionDiscussHandoff } from "./lib/visionDiscuss";
 import { useKeyboardViewportOffset } from "./hooks/useKeyboardViewport";
 import { useTheme } from "./hooks/useTheme";
@@ -56,7 +56,7 @@ function App() {
       <AppShell
         activeTab={tab}
         onTabChange={(next) => {
-          if (next === "vision") unlockSpeech();
+          if (next === "vision") unlockAccessibleSpeech();
           setTab(next);
         }}
       >

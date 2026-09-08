@@ -10,6 +10,11 @@ import {
   hasApiKeyForProvider,
 } from "./providers";
 import type { ThemeSetting } from "./theme";
+import {
+  SETTINGS_STORAGE_KEY,
+  readSettingsRawSync,
+  writeSettingsRawSync,
+} from "./capacitor/preferencesStore";
 
 export type { AIProvider };
 
@@ -24,6 +29,10 @@ export interface Settings {
   visionManualOnly: boolean;
   isAIEnabled: boolean;
   isTTSEnabled: boolean;
+  /** Tier-1 async JSON scene extraction (Gemini 3.5 Flash-Lite). */
+  sceneExtractionEnabled: boolean;
+  /** Pan TTS toward scene objects when announcing hazards/objects. */
+  spatialAudioEnabled: boolean;
   speakChatReplies: boolean;
   alwaysListening: boolean;
   wakeWordEnabled: boolean;
@@ -38,8 +47,6 @@ export interface Settings {
   webSearchEnabled: boolean;
 }
 
-const STORAGE_KEY = "sightread_settings";
-
 const DEFAULTS: Settings = {
   provider: "gemini",
   theme: "auto",
@@ -51,6 +58,8 @@ const DEFAULTS: Settings = {
   visionManualOnly: false,
   isAIEnabled: true,
   isTTSEnabled: false,
+  sceneExtractionEnabled: true,
+  spatialAudioEnabled: false,
   speakChatReplies: false,
   alwaysListening: false,
   wakeWordEnabled: false,
@@ -77,10 +86,9 @@ const VALID_PROVIDERS = new Set<string>([
 
 const VALID_THEMES = new Set<string>(["light", "dark", "auto"]);
 
-export function loadSettings(): Settings {
+function parseSettings(raw: string | null): Settings {
+  if (!raw) return { ...DEFAULTS };
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return { ...DEFAULTS };
     const parsed = JSON.parse(raw) as Partial<Settings> & {
       nvidiaProxyPath?: string;
     };
@@ -99,6 +107,8 @@ export function loadSettings(): Settings {
       theme,
       promptMode: rest.promptMode === "manual" ? "manual" : "auto",
       visionManualOnly: rest.visionManualOnly === true,
+      sceneExtractionEnabled: rest.sceneExtractionEnabled !== false,
+      spatialAudioEnabled: rest.spatialAudioEnabled === true,
       analysisIntervalSec: Math.min(
         30,
         Math.max(5, rest.analysisIntervalSec ?? DEFAULTS.analysisIntervalSec),
@@ -113,11 +123,15 @@ export function loadSettings(): Settings {
   }
 }
 
-export function saveSettings(settings: Settings): void {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
+export function loadSettings(): Settings {
+  return parseSettings(readSettingsRawSync());
 }
 
-export { hasApiKeyForProvider };
+export function saveSettings(settings: Settings): void {
+  writeSettingsRawSync(JSON.stringify(settings));
+}
+
+export { hasApiKeyForProvider, SETTINGS_STORAGE_KEY };
 
 export function getSelectedPrompt(settings: Settings) {
   return getPromptPreset(settings.selectedPromptId);

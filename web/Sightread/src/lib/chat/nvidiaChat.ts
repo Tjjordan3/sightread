@@ -1,9 +1,14 @@
 import { nvidiaChatCompletion, readNvidiaResponse } from "../nvidia/request";
-import { buildTranscript, type ChatMessage } from "./types";
+import { buildTranscript, type ChatMessage, type ChatOptions } from "./types";
+import { buildAgentSystemPrompt } from "./systemPrompt";
 
 export function createNvidiaChatService(apiKey: string, model: string) {
   return {
-    async chat(messages: ChatMessage[], attachedImageBase64?: string): Promise<string> {
+    async chat(
+      messages: ChatMessage[],
+      attachedImageBase64?: string,
+      options?: ChatOptions,
+    ): Promise<string> {
       const content: Array<Record<string, unknown>> = [
         { type: "text", text: buildTranscript(messages) },
       ];
@@ -19,7 +24,10 @@ export function createNvidiaChatService(apiKey: string, model: string) {
       const response = await nvidiaChatCompletion(apiKey, {
         model,
         max_tokens: 400,
-        messages: [{ role: "user", content }],
+        messages: [
+          { role: "system", content: buildAgentSystemPrompt(options?.sceneContext) },
+          { role: "user", content },
+        ],
       });
       return readNvidiaResponse(response);
     },

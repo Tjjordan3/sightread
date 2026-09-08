@@ -14,8 +14,10 @@ Browser-based AI agent and vision companion for Sightread. Works as a Meta AI–
 
 ### Vision (Sightread live mode)
 - Webcam streaming with throttled vision analysis
+- **Tier-1 scene JSON** via Gemini 3.5 Flash-Lite (`/api/vision/scene`) feeding the Agent system prompt
 - Live AI response panel, **Analyze now**, and photo upload
 - Quick chat overlay with live camera frame attach
+- Native TTS + optional spatial HRTF cues (Capacitor / Web Audio)
 
 ### AI providers (local, browser-direct)
 - **Google Gemini**, **OpenAI**, **Groq**
@@ -31,7 +33,8 @@ Browser-based AI agent and vision companion for Sightread. Works as a Meta AI–
 
 ### Shared
 - Same prompt presets as iOS/Android
-- API keys in `localStorage` (on-device only); calls go directly to your chosen provider
+- API keys in `localStorage` / Capacitor Preferences (on-device only); chat calls go to your chosen provider
+- Optional server `GEMINI_API_KEY` for Tier-1 scene extraction (recommended for Capacitor builds)
 - **Light / dark / auto theme** — matches system appearance when set to Auto
 
 ## Quick start
@@ -44,7 +47,17 @@ npm run dev
 
 1. **Settings** → pick a provider and add its API key
 2. **Agent** tab → chat, history, photos, or voice
-3. **Vision** tab → live webcam analysis
+3. **Vision** tab → live webcam analysis + scene JSON
+
+### Capacitor (iOS / Android shells)
+
+```bash
+npm run cap:sync
+npm run cap:android   # opens Android Studio
+npm run cap:ios       # opens Xcode (macOS)
+```
+
+App ID: `com.sightread.app`. Camera / mic permissions are declared in the native projects under `android/` and `ios/`. This Capacitor track is separate from the Meta DAT apps in `/ios/Sightread` and `/android/Sightread`.
 
 ### Production build
 
@@ -57,7 +70,7 @@ Deploy `dist/` to any static HTTPS host.
 
 ### Cloudflare Pages (recommended)
 
-Includes Pages Functions for `/api/nvidia` and `/api/search` — no IIS or Node process required.
+Includes Pages Functions for `/api/nvidia`, `/api/search`, and `/api/vision/scene` — no IIS or Node process required.
 
 See **[CLOUDFLARE_DEPLOY.md](./CLOUDFLARE_DEPLOY.md)** for setup, secrets, and deploy steps.
 

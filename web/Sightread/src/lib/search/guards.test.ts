@@ -1,12 +1,19 @@
 import { describe, expect, it, beforeEach } from "vitest";
 import {
   MAX_SEARCH_QUERY_LENGTH,
+  MAX_VISION_IMAGE_BASE64_CHARS,
+  VISION_RATE_LIMIT,
   consumeRateLimit,
   getRequestOrigin,
   isSameOriginRequest,
   resetRateLimitsForTests,
   validateSearchQuery,
 } from "../../../functions/api/_lib/guards";
+import {
+  parseBearerToken,
+  resolveGeminiApiKey,
+  validateVisionImageBase64,
+} from "../../../functions/api/_lib/sceneExtraction";
 
 describe("validateSearchQuery", () => {
   it("rejects missing or blank queries", () => {
@@ -82,5 +89,73 @@ describe("consumeRateLimit", () => {
     expect(consumeRateLimit("ip:2", 1, 1_000, 0).allowed).toBe(true);
     expect(consumeRateLimit("ip:2", 1, 1_000, 500).allowed).toBe(false);
     expect(consumeRateLimit("ip:2", 1, 1_000, 1_000).allowed).toBe(true);
+  });
+
+  it("enforces vision rate limit defaults", () => {
+    for (let i = 0; i < VISION_RATE_LIMIT.max; i++) {
+      expect(
+        consumeRateLimit(
+          "vision:1",
+          VISION_RATE_LIMIT.max,
+          VISION_RATE_LIMIT.windowMs,
+          i,
+        ).allowed,
+      ).toBe(true);
+    }
+    expect(
+      consumeRateLimit(
+        "vision:1",
+        VISION_RATE_LIMIT.max,
+        VISION_RATE_LIMIT.windowMs,
+        VISION_RATE_LIMIT.max,
+      ).allowed,
+    ).toBe(false);
+  });
+});
+
+describe("vision scene key + image guards", () => {
+  it("parses Bearer tokens", () => {
+    expect(parseBearerToken("Bearer abc")).toBe("abc");
+    expect(parseBearerToken("bearer xyz")).toBe("xyz");
+    expect(parseBearerToken("Token abc")).toBeNull();
+  });
+
+  it("prefers server GEMINI_API_KEY over client", () => {
+    const result = resolveGeminiApiKey("server-key", "Bearer client-key");
+    expect(result).toEqual({
+      ok: true,
+      apiKey: "server-key",
+      source: "server",
+    });
+  });
+
+  it("falls back to client Bearer when server key missing", () => {
+    const result = resolveGeminiApiKey("", "Bearer client-key");
+    expect(result).toEqual({
+      ok: true,
+      apiKey: "client-key",
+      source: "client",
+    });
+  });
+
+  it("errors when no key is available", () => {
+    expect(resolveGeminiApiKey(undefined, null).ok).toBe(false);
+  });
+
+  it("validates imageBase64 size and encoding", () => {
+    expect(validateVisionImageBase64("abcd", 10)).toEqual({
+      ok: true,
+      imageBase64: "abcd",
+    });
+    expect(
+      validateVisionImageBase64("data:image/jpeg;base64,abcd", 10),
+    ).toEqual({ ok: true, imageBase64: "abcd" });
+    expect(
+      validateVisionImageBase64(
+        "x".repeat(MAX_VISION_IMAGE_BASE64_CHARS + 1),
+        MAX_VISION_IMAGE_BASE64_CHARS,
+      ).ok,
+    ).toBe(false);
+    expect(validateVisionImageBase64("!!!", 10).ok).toBe(false);
   });
 });

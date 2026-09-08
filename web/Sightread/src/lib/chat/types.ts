@@ -3,6 +3,7 @@ export type ChatRole = "user" | "assistant";
 /** Same shape as search API results — shared with SourceLinks and vision. */
 export type { SearchCitation as ChatCitation } from "../search/tavilyClient";
 import type { SearchCitation as ChatCitation } from "../search/tavilyClient";
+import type { SceneState } from "../scene/schema";
 
 export interface ChatMessage {
   id: string;
@@ -18,10 +19,15 @@ export interface ChatReply {
   citations?: ChatCitation[];
 }
 
+export interface ChatOptions {
+  sceneContext?: SceneState | null;
+}
+
 export interface ChatAIService {
   chat(
     messages: ChatMessage[],
     attachedImageBase64?: string,
+    options?: ChatOptions,
   ): Promise<ChatReply>;
 }
 

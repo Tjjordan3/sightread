@@ -14,6 +14,15 @@ dist-ssr
 .dev.vars
 .wrangler
 
+# Capacitor native project local artifacts
+android/.gradle
+android/app/build
+android/build
+android/local.properties
+ios/App/Pods
+ios/App/Podfile.lock
+ios/DerivedData
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

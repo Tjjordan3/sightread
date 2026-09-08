@@ -11,7 +11,12 @@ import {
   stripImageUrlsForToolUse,
   supportsWebSearchTools,
 } from "./openaiConfig";
-import type { ChatAIService, ChatMessage, ChatReply } from "./types";
+import type {
+  ChatAIService,
+  ChatMessage,
+  ChatOptions,
+  ChatReply,
+} from "./types";
 import { createAnthropicChatService } from "./anthropicChat";
 import { createGeminiChatService } from "./geminiChat";
 import { createGroqChatService } from "./groqChat";
@@ -19,6 +24,7 @@ import { createMistralChatService } from "./mistralChat";
 import { createNvidiaChatService } from "./nvidiaChat";
 import { createOpenAIChatService } from "./openaiChat";
 import { createOpenRouterChatService } from "./openrouterChat";
+import { buildAgentSystemPrompt } from "./systemPrompt";
 
 const WEB_SEARCH_TOOL = {
   type: "function" as const,
@@ -37,16 +43,16 @@ const WEB_SEARCH_TOOL = {
   },
 };
 
-const SYSTEM_PROMPT =
-  "You are Sightread, a helpful AI agent. When you use web search results, cite sources inline like [1], [2] matching the result numbers. Be concise and accurate.";
-
 type ApiMessage = Record<string, unknown>;
 
 function toApiMessages(
   messages: ChatMessage[],
   attachedImageBase64?: string,
+  options?: ChatOptions,
 ): ApiMessage[] {
-  const api: ApiMessage[] = [{ role: "system", content: SYSTEM_PROMPT }];
+  const api: ApiMessage[] = [
+    { role: "system", content: buildAgentSystemPrompt(options?.sceneContext) },
+  ];
   const history = messages.slice(-20);
 
   for (let i = 0; i < history.length; i++) {
@@ -88,6 +94,7 @@ async function runToolAgentChat(
   settings: Settings,
   messages: ChatMessage[],
   attachedImageBase64?: string,
+  options?: ChatOptions,
 ): Promise<ChatReply> {
   const apiKey = getApiKey(settings);
   if (!apiKey.trim()) throw new VisionAIError("Add API key in Settings.");
@@ -97,7 +104,7 @@ async function runToolAgentChat(
   });
   const apiMessages = stripImageUrlsForToolUse(
     settings.provider,
-    toApiMessages(messages, attachedImageBase64),
+    toApiMessages(messages, attachedImageBase64, options),
   );
   const allCitations: SearchCitation[] = [];
 
@@ -196,12 +203,16 @@ async function runToolAgentChat(
   throw new VisionAIError("Web search took too many steps.");
 }
 
-function wrapLegacy(
-  chat: (messages: ChatMessage[], attachedImageBase64?: string) => Promise<string>,
-): ChatAIService {
+type LegacyChat = (
+  messages: ChatMessage[],
+  attachedImageBase64?: string,
+  options?: ChatOptions,
+) => Promise<string>;
+
+function wrapLegacy(chat: LegacyChat): ChatAIService {
   return {
-    async chat(messages, attachedImageBase64) {
-      const text = await chat(messages, attachedImageBase64);
+    async chat(messages, attachedImageBase64, options) {
+      const text = await chat(messages, attachedImageBase64, options);
       return { text };
     },
   };
@@ -243,12 +254,18 @@ export function createChatService(settings: Settings): ChatAIService {
       };
     }
     return {
-      async chat(messages, attachedImageBase64) {
-        return runToolAgentChat(settings, messages, attachedImageBase64);
+      async chat(messages, attachedImageBase64, options) {
+        return runToolAgentChat(
+          settings,
+          messages,
+          attachedImageBase64,
+          options,
+        );
       },
     };
   }
   return createLegacyChatService(settings);
 }
 
-export type { ChatCitation, ChatMessage, ChatReply, ChatRole } from "./types";
+export { buildAgentSystemPrompt, BASE_AGENT_SYSTEM_PROMPT } from "./systemPrompt";
+export type { ChatCitation, ChatMessage, ChatOptions, ChatReply, ChatRole } from "./types";
