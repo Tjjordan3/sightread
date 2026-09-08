@@ -1,7 +1,5 @@
 # Sightread
 
-**Read the world through your frames.** Sightread is an iOS companion app for Ray-Ban Meta glasses that streams first-person video via the [Meta Wearables Device Access Toolkit](https://wearables.developer.meta.com/) and sends sampled frames to Gemini, OpenAI, or Groq for real-time vision analysis.
-
 ## Features
 
 - Camera streaming from Ray-Ban Meta (Gen 1/2) through DAT SDK
